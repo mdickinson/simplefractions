@@ -214,7 +214,94 @@ def from_compressed_path(path):
             a, b, c, d = a, a, c, c
         else:
             a, b, c, d = b + count * a, a, d + count * c, c
+
+    if c + d == 0:
+        assert a + b > 0
+        return math.inf
+
     return fractions.Fraction(a + b, c + d)
+
+
+def esb_path(x, side):
+    """
+    Extended Stern-Brocot tree path for a given number x.
+    """
+    assert side in {-1, 0, 1}
+
+    if (x, side) < (0, 0):
+        yield 0
+        yield from esb_path(-x, -side)
+        return
+
+    if (x, side) == (0, 0):
+        return
+
+    if (x, side) >= (math.inf, 0):
+        raise ValueError("Input out of range")
+
+    if x == 0:
+        assert side == 1
+        yield 1
+        yield math.inf
+        return
+
+    if math.isinf(x):
+        assert side == -1
+        yield math.inf
+        return
+
+    gen = compressed_path(x, side)
+    try:
+        first = next(gen)
+    except StopIteration:
+        yield 1
+        return
+
+    if first == 0:
+        # Claim that a 0 is _always_ followed by something nonzero,
+        # so the following 'next' is safe.
+        yield 1 + next(gen)
+        yield from gen
+
+    else:
+        # value was smaller than 1, the sequence of "L"s needs to
+        # be preceded by an "R"
+        yield 1
+        yield first
+        yield from gen
+
+
+def from_esb_path(path):
+    """
+    Reconstruction of number x (and a side!) from its Extended
+    Stern-Brocot tree path.
+    """
+    path = iter(path)
+
+    # XXX Deal with case where path is empty
+    try:
+        first = next(path)
+    except StopIteration:
+        return fractions.Fraction(0, 1)
+
+    if first == 0:
+        # Negative side of the extended Stern-Brocot tree.
+
+        # In this case, guaranteed to be a next element, though
+        # it could be infinity.
+        return -from_esb_path(path)
+
+    elif first == 1:
+        return from_compressed_path(path)
+
+    else:
+
+        def new_path():
+            yield 0
+            yield first - 1
+            yield from path
+
+        return from_compressed_path(new_path())
 
 
 def common_prefix(path1, path2):
@@ -546,6 +633,84 @@ class SternBrocotTests(unittest.TestCase):
         """
         self.assertLessEqual(abs(x.numerator), abs(y.numerator))
         self.assertLessEqual(x.denominator, y.denominator)
+
+    def test_esb_path(self):
+
+        F = fractions.Fraction
+        inf = math.inf
+
+        test_values = [
+            # unsided case
+            (1, 0, [1]),
+            (2, 0, [2]),
+            (3, 0, [3]),
+            (F(1, 2), 0, [1, 1]),
+            (F(1, 3), 0, [1, 2]),
+            (F(5, 17), 0, [1, 3, 2, 1]),
+            (F(17, 5), 0, [4, 2, 1]),
+            (0, 0, []),
+            (-1, 0, [0, 1]),
+            (-2, 0, [0, 2]),
+            (F(-1, 3), 0, [0, 1, 2]),
+            # sided case
+            (3, -1, [3, 1, inf]),
+            (3, 1, [4, inf]),
+            (0, 1, [1, inf]),
+            (inf, -1, [inf]),
+            (-inf, 1, [0, inf]),
+            (-3, -1, [0, 4, inf]),
+            (-3, 1, [0, 3, 1, inf]),
+        ]
+
+        for value, side, expected_path in test_values:
+            with self.subTest(value=value, side=side):
+                self.assertEqual(
+                    list(esb_path(value, side)),
+                    expected_path,
+                )
+
+        with self.assertRaises(ValueError):
+            list(esb_path(inf, 0))
+
+        with self.assertRaises(ValueError):
+            list(esb_path(inf, 1))
+
+        with self.assertRaises(ValueError):
+            list(esb_path(-inf, 0))
+
+        with self.assertRaises(ValueError):
+            list(esb_path(-inf, -1))
+
+    def test_roundtrip_esb_path(self):
+        F = fractions.Fraction
+        inf = math.inf
+
+        test_values = [
+            (3, 0),
+            (F(1, 3), 0),
+            (F(1, 3), 1),
+            (F(1, 3), -1),
+            (3, -1),
+            (3, 1),
+            (1.5, 0),
+            (1, 0),
+            (1, -1),
+            (1, 1),
+            (0, 1),
+            (0, 0),
+            (0, -1),
+            (-2, 0),
+            (-2, -1),
+            (-2, 1),
+            # infinities
+            (inf, -1),
+            (-inf, 1),
+        ]
+        for value, side in test_values:
+            with self.subTest(value=value, side=side):
+                path = esb_path(value, side)
+                value_out = from_esb_path(path)
+                self.assertEqual(value, value_out)
 
 
 if __name__ == "__main__":
