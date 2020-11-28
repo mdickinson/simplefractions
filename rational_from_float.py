@@ -110,251 +110,103 @@ common prefix of sRL^infinity with tLR^infinity.
 
 import fractions
 import math
-import random
 import struct
-import unittest
-import sys
-
-
-def _compressed_path_unsided(x):
-    """
-    Compute the path to a positive rational in the Stern-Brocot tree.
-
-    Returns the path in a compressed form that's much more efficient for
-    fractions with large numerator or denominator.
-
-    Parameters
-    ----------
-    x : fractions.Fraction
-    """
-    if not 0 < x < math.inf:
-        raise ValueError("Input must be positive")
-
-    tt = 0
-
-    a, b = x.as_integer_ratio()
-
-    # loop invariant: 0 < a, 0 < b and gcd(a, b) == 1
-    # on first iteration, b <= a is possible
-    # for subsequent iterations, a < b
-
-    while a != b:
-        q, r = divmod(b - (0 <= tt), a)
-        yield q
-        a, b = r + (0 <= tt), a
-        tt = -tt
-
-    if tt:
-        yield math.inf
-
-
-def _compressed_path_sided(x, ss):
-    """
-    Variant of compressed_path suitable for use with an endpoint
-    of an open interval.
-
-    Result always starts with an "L", and then alternates.
-    It always ends with an "inf".
-
-    The first number may be a 0; all subsequent numbers will
-    be nonzero.
-
-    Parameters
-    ----------
-    x : number or infinity
-        Must be in [0, inf) if ss is True, else in (0, inf]
-    ss : bool
-    """
-    if ss:
-        if not 0 <= x < math.inf:
-            raise ValueError("Input must be nonnegative")
-    else:
-        if not 0 < x <= math.inf:
-            raise ValueError("Input must be positive or infinity")
-
-    tt = 1 if ss else -1
-
-    a, b = (1, 0) if x == math.inf else x.as_integer_ratio()
-
-    while a:
-        q, r = divmod(b - (0 <= tt), a)
-        yield q
-        a, b = r + (0 <= tt), a
-        tt = -tt
-
-    if tt:
-        yield math.inf
-
-
-def compressed_path(x, side):
-    """
-    Parameters
-    ----------
-    x : number
-        The number to give that path to.
-    side : int
-        Either -1, 0, or 1
-    """
-
-    if side == 1:
-        return _compressed_path_sided(x, True)
-    elif side == -1:
-        return _compressed_path_sided(x, False)
-    else:
-        return _compressed_path_unsided(x)
-
-
-def from_compressed_path(path):
-    """
-    Reconstruct a fraction from a compressed path.
-    """
-    a, b, c, d = 0, 1, 1, 0
-    for count in path:
-        if count == math.inf:
-            a, b, c, d = a, a, c, c
-        else:
-            a, b, c, d = b + count * a, a, d + count * c, c
-
-    if c + d == 0:
-        assert a + b > 0
-        return math.inf
-
-    return fractions.Fraction(a + b, c + d)
 
 
 def esb_path(x, side):
     """
     Extended Stern-Brocot tree path for a given number x.
+
+    Parameters
+    ----------
+    x : number
+        Integer, fraction or float. Can also be math.inf
+        or -math.inf
+    side : int
+        Either -1, 0 or 1; controls which of the three
+        equivalent paths for a given x is produced.
+
+    Yields
+    ------
+    coeff : int
+        Sequence of coefficients in the tree path, with
+        each coefficient giving the number of times to
+        go left or right. The first coefficient gives
+        the number of steps left, and subsequent coefficients
+        alternative with respect to the direction, so a
+        sequence [0, 3, 5, 2] means: 'take 0 steps left,
+        then 3 steps right, then 5 steps left, then 2 steps
+        right'.
+
+        The first coefficient generated may be 0,
+        and the last coefficient generated may be math.inf; other
+        than that, all coefficients are positive integers.
+        Additionally, an initial zero is always followed
+        by something nonzero, so `[0]` is not a possible
+        output sequence.
     """
-    assert side in {-1, 0, 1}
+    if side not in {-1, 0, 1}:
+        raise ValueError("side should be one of -1, 0 or 1")
+    if not (-math.inf, 0) < (x, side) < (math.inf, 0):
+        raise ValueError("Input out of range")
 
     if (x, side) < (0, 0):
         yield 0
-        yield from esb_path(-x, -side)
-        return
+        x, side = -x, -side
 
-    if (x, side) == (0, 0):
-        return
-
-    if (x, side) >= (math.inf, 0):
-        raise ValueError("Input out of range")
-
-    if x == 0:
-        assert side == 1
-        yield 1
-        yield math.inf
-        return
-
-    if math.isinf(x):
-        assert side == -1
-        yield math.inf
-        return
-
-    gen = compressed_path(x, side)
-    try:
-        first = next(gen)
-    except StopIteration:
-        yield 1
-        return
-
-    if first == 0:
-        # Claim that a 0 is _always_ followed by something nonzero,
-        # so the following 'next' is safe.
-        yield 1 + next(gen)
-        yield from gen
-
-    else:
-        # value was smaller than 1, the sequence of "L"s needs to
-        # be preceded by an "R"
-        yield 1
-        yield first
-        yield from gen
+    n, d = (1, 0) if x == math.inf else x.as_integer_ratio()
+    n += d
+    while d < n or side:
+        if not d:
+            yield math.inf
+            return
+        q, r = divmod(n - (side <= 0), d)
+        yield q
+        n, d, side = d, r + (side <= 0), -side
 
 
 def from_esb_path(path):
     """
-    Reconstruction of number x (and a side!) from its Extended
-    Stern-Brocot tree path.
+    Reconstruct a number x from its Extended Stern-Brocot tree path.
     """
-    path = iter(path)
+    a, b, c, d = -1, 1, 1, 0
+    for q in path:
+        if q == 0:
+            a, c = -a, -c
+        elif q == math.inf:
+            a, b = c, d
+        else:
+            a, b, c, d = c, d, a + q * c, b + q * d
 
-    # XXX Deal with case where path is empty
-    try:
-        first = next(path)
-    except StopIteration:
-        return fractions.Fraction(0, 1)
-
-    if first == 0:
-        # Negative side of the extended Stern-Brocot tree.
-
-        # In this case, guaranteed to be a next element, though
-        # it could be infinity.
-        return -from_esb_path(path)
-
-    elif first == 1:
-        return from_compressed_path(path)
-
+    if b + d:
+        return fractions.Fraction(a + c, b + d)
     else:
-
-        def new_path():
-            yield 0
-            yield first - 1
-            yield from path
-
-        return from_compressed_path(new_path())
+        return math.inf if a + c > 0 else -math.inf
 
 
-def common_prefix(path1, path2):
+def _common_prefix(path1, path2):
     """
     Longest common prefix of two paths.
     """
     for count1, count2 in zip(path1, path2):
-        if count1 == count2:
-            yield count1
-        else:
+        if count1 != count2:
             yield min(count1, count2)
             break
+        yield count1
 
 
 def simplest_in_interval(left, left_included, right, right_included):
     """
     Return simplest fraction in a given nonempty subinterval.
     """
-    nonempty = (
-        left <= right if left_included and right_included else left < right
-    )
-    if not nonempty:
-        raise ValueError("interval is empty")
+    left_side = 0 if left_included else 1
+    right_side = 0 if right_included else -1
+    if (left, left_side) > (right, right_side):
+        raise ValueError("empty interval")
 
-    interval_contains_zero = (left <= 0 if left_included else left < 0) and (
-        0 <= right if right_included else 0 < right
-    )
-    if interval_contains_zero:
-        return fractions.Fraction(0, 1)
-
-    if right <= 0:
-        return -simplest_in_interval(
-            -right, right_included, -left, left_included
-        )
-
-    left_sequence = compressed_path(left, 0 if left_included else 1)
-    right_sequence = compressed_path(right, 0 if right_included else -1)
-
-    return from_compressed_path(common_prefix(left_sequence, right_sequence))
-
-
-def simplest_in_closed_interval(x, y):
-    """
-    Return simplest fraction in the given closed interval [x, y].
-    """
-    return simplest_in_interval(x, True, y, True)
-
-
-def simplest_in_open_interval(x, y):
-    """
-    Return simplest fraction in the given open interval (x, y).
-    """
-    return simplest_in_interval(x, False, y, False)
+    left_sequence = esb_path(left, left_side)
+    right_sequence = esb_path(right, right_side)
+    return from_esb_path(_common_prefix(left_sequence, right_sequence))
 
 
 def interval_rounding_to(x):
@@ -399,319 +251,4 @@ def float_to_fraction(x):
     Return the simplest fraction that converts to the given float.
     """
     left, right, closed = interval_rounding_to(x)
-    if closed:
-        return simplest_in_closed_interval(left, right)
-    else:
-        return simplest_in_open_interval(left, right)
-
-
-def float_or_inf(frac):
-    """
-    Test helper: convert a fraction to a float, converting out-of-range
-    fractions to an appropriate signed infinity.
-    """
-    try:
-        return float(frac)
-    except OverflowError:
-        return math.inf if frac > 0 else -math.inf
-
-
-class SternBrocotTests(unittest.TestCase):
-    def test_interval_rounding_to(self):
-        test_values = [
-            0.1,
-            1.0,
-            2.7,
-            -0.3,
-            0.0,
-            -0.0,
-            sys.float_info.max,
-            -sys.float_info.max,
-            sys.float_info.min,
-            -sys.float_info.min,
-            sys.float_info.min * sys.float_info.epsilon,
-            -sys.float_info.min * sys.float_info.epsilon,
-        ]
-        for value in test_values:
-            with self.subTest(value=value):
-                left, right, closed = interval_rounding_to(value)
-                self.assertIsInstance(left, fractions.Fraction)
-                self.assertIsInstance(right, fractions.Fraction)
-                self.assertLess(left, value)
-                self.assertLess(value, right)
-
-                width = right - left
-                if closed:
-                    self.assertLess(
-                        float_or_inf(left - width / 1000),
-                        value,
-                    )
-                    self.assertEqual(float(left), value)
-                    self.assertEqual(value, float(right))
-                    self.assertLess(
-                        value,
-                        float_or_inf(right + width / 1000),
-                    )
-                else:
-                    self.assertLess(float_or_inf(left), value)
-                    self.assertEqual(
-                        float(left + width / 1000),
-                        value,
-                    )
-                    self.assertEqual(
-                        value,
-                        float(right - width / 1000),
-                    )
-                    self.assertLess(value, float_or_inf(right))
-
-    def test_roundtrip_through_compressed_path(self):
-        test_fractions = [
-            fractions.Fraction(n, d)
-            for n in range(1, 100)
-            for d in range(1, 100)
-            if math.gcd(n, d) == 1
-        ]
-
-        for x in test_fractions:
-            with self.subTest(x=x):
-                y = from_compressed_path(compressed_path(x, -1))
-                self.assertEqual(y, x)
-
-        for x in test_fractions:
-            with self.subTest(x=x):
-                y = from_compressed_path(compressed_path(x, 1))
-                self.assertEqual(y, x)
-
-        for x in test_fractions:
-            with self.subTest(x=x):
-                y = from_compressed_path(compressed_path(x, 0))
-                self.assertEqual(y, x)
-
-    def test_simplest_in_closed_interval(self):
-        # Round fractions to nearest 1000, see if we can recover them
-
-        test_fractions = [
-            fractions.Fraction(n, d)
-            for n in range(1, 100)
-            for d in range(1, 100)
-            if math.gcd(n, d) == 1
-        ]
-
-        for c in test_fractions:
-            z = fractions.Fraction(round(c * 1000), 1000)
-            x = z - fractions.Fraction(1, 2000)
-            y = z + fractions.Fraction(1, 2000)
-
-            # c is in the closed interval [x, y], so the simplest fraction
-            # in [x, y] must be at least as simple as c.
-            self.assertTrue(x <= c <= y)
-
-            d = simplest_in_closed_interval(x, y)
-
-            self.assertTrue(x <= d <= y)
-
-            self.assertSimpler(d, c)
-
-        F = fractions.Fraction
-
-        # Corner case where left == right
-        self.assertEqual(
-            simplest_in_closed_interval(F(1, 2), F(1, 2)),
-            F(1, 2),
-        )
-        self.assertEqual(simplest_in_closed_interval(0, 0), 0)
-
-    def test_simplest_in_open_interval(self):
-        F = fractions.Fraction
-
-        self.assertEqual(
-            simplest_in_open_interval(F(7, 10), F(5, 7)),
-            F(12, 17),
-        )
-        self.assertEqual(
-            simplest_in_open_interval(F(10, 11), F(12, 13)),
-            F(11, 12),
-        )
-        self.assertEqual(
-            simplest_in_open_interval(F(6, 11), F(17, 31)),
-            F(23, 42),
-        )
-        self.assertEqual(
-            simplest_in_open_interval(F(0, 1), F(3, 5)),
-            F(1, 2),
-        )
-        self.assertEqual(
-            simplest_in_open_interval(F(-3, 1), F(-1, 1)),
-            F(-2, 1),
-        )
-        self.assertEqual(
-            simplest_in_open_interval(-F(1, 1), F(0, 1)),
-            -F(1, 2),
-        )
-        self.assertEqual(
-            simplest_in_open_interval(-F(2, 1), F(2, 1)),
-            F(0, 1),
-        )
-        self.assertEqual(
-            simplest_in_open_interval(F(5, 2), math.inf),
-            F(3, 1),
-        )
-        self.assertEqual(
-            simplest_in_open_interval(-math.inf, math.inf),
-            F(0, 1),
-        )
-        self.assertEqual(
-            simplest_in_open_interval(-math.inf, F(5, 2)),
-            F(0, 1),
-        )
-
-        with self.assertRaises(ValueError):
-            simplest_in_open_interval(F(1, 2), F(1, 2))
-        with self.assertRaises(ValueError):
-            simplest_in_open_interval(0, 0)
-
-    def test_simplest_in_interval(self):
-        self.assertEqual(simplest_in_interval(3, False, 4, False), 3.5)
-        self.assertEqual(simplest_in_interval(3, True, 4, True), 3)
-
-        self.assertEqual(simplest_in_interval(3, True, 4, False), 3)
-        self.assertEqual(simplest_in_interval(3, False, 4, True), 4)
-
-    def check_float_to_fraction(self, f):
-        """
-        Check that float_to_fraction accurately recovers the given fraction.
-
-        Given a fraction f, convert it to the nearest representable float,
-        then convert that float back to the simplest fraction that represents
-        it. The new fraction should be simpler than, or equal to, the
-        original fraction.
-
-        Parameters
-        ----------
-        f : fractions.Fraction
-        """
-        x = float(f)
-        g = float_to_fraction(x)
-        self.assertEqual(float(g), x)
-        self.assertSimpler(g, f)
-
-    def test_float_to_fraction_roundtrip(self):
-        test_values = [0.0, 0.3, -0.3, 1e-100, sys.float_info.max]
-
-        for value in test_values:
-            with self.subTest(value=value):
-                self.assertEqual(float(float_to_fraction(value)), value)
-
-    def test_float_to_fraction(self):
-        # Given a fraction n/d (n and d positive),
-        # float_to_fraction(n/d) should give another fraction
-
-        random_test_pairs = [
-            (random.randrange(1, 100000), random.randrange(1, 100000))
-            for _ in range(10)
-        ]
-
-        for n, d in random_test_pairs:
-            f = fractions.Fraction(n, d)
-            with self.subTest(f=f):
-                self.check_float_to_fraction(f)
-
-        # Particular test pairs
-        test_pairs = [
-            0.3 .as_integer_ratio(),
-            1.4 .as_integer_ratio(),
-        ]
-
-        for n, d in test_pairs:
-            f = fractions.Fraction(n, d)
-            with self.subTest(f=f):
-                self.check_float_to_fraction(f)
-
-    def assertSimpler(self, x, y):
-        """
-        Assert that x is at least as simple as y.
-        """
-        self.assertLessEqual(abs(x.numerator), abs(y.numerator))
-        self.assertLessEqual(x.denominator, y.denominator)
-
-    def test_esb_path(self):
-
-        F = fractions.Fraction
-        inf = math.inf
-
-        test_values = [
-            # unsided case
-            (1, 0, [1]),
-            (2, 0, [2]),
-            (3, 0, [3]),
-            (F(1, 2), 0, [1, 1]),
-            (F(1, 3), 0, [1, 2]),
-            (F(5, 17), 0, [1, 3, 2, 1]),
-            (F(17, 5), 0, [4, 2, 1]),
-            (0, 0, []),
-            (-1, 0, [0, 1]),
-            (-2, 0, [0, 2]),
-            (F(-1, 3), 0, [0, 1, 2]),
-            # sided case
-            (3, -1, [3, 1, inf]),
-            (3, 1, [4, inf]),
-            (0, 1, [1, inf]),
-            (inf, -1, [inf]),
-            (-inf, 1, [0, inf]),
-            (-3, -1, [0, 4, inf]),
-            (-3, 1, [0, 3, 1, inf]),
-        ]
-
-        for value, side, expected_path in test_values:
-            with self.subTest(value=value, side=side):
-                self.assertEqual(
-                    list(esb_path(value, side)),
-                    expected_path,
-                )
-
-        with self.assertRaises(ValueError):
-            list(esb_path(inf, 0))
-
-        with self.assertRaises(ValueError):
-            list(esb_path(inf, 1))
-
-        with self.assertRaises(ValueError):
-            list(esb_path(-inf, 0))
-
-        with self.assertRaises(ValueError):
-            list(esb_path(-inf, -1))
-
-    def test_roundtrip_esb_path(self):
-        F = fractions.Fraction
-        inf = math.inf
-
-        test_values = [
-            (3, 0),
-            (F(1, 3), 0),
-            (F(1, 3), 1),
-            (F(1, 3), -1),
-            (3, -1),
-            (3, 1),
-            (1.5, 0),
-            (1, 0),
-            (1, -1),
-            (1, 1),
-            (0, 1),
-            (0, 0),
-            (0, -1),
-            (-2, 0),
-            (-2, -1),
-            (-2, 1),
-            # infinities
-            (inf, -1),
-            (-inf, 1),
-        ]
-        for value, side in test_values:
-            with self.subTest(value=value, side=side):
-                path = esb_path(value, side)
-                value_out = from_esb_path(path)
-                self.assertEqual(value, value_out)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    return simplest_in_interval(left, closed, right, closed)
