@@ -113,6 +113,29 @@ import math
 import struct
 
 
+def _to_integer_ratio(x):
+    """
+    Convert a finite number or an infinity to an integer ratio.
+    """
+    if x == math.inf:
+        return 1, 0
+    elif x == -math.inf:
+        return -1, 0
+    else:
+        return x.as_integer_ratio()
+
+
+def _from_integer_ratio(n, d):
+    """
+    Convert a pair (n, d) with gcd(n, d) == 1 and d > 0 to
+    a fraction or an infinity.
+    """
+    if d:
+        return fractions.Fraction(n, d)
+    else:
+        return math.inf if n > 0 else -math.inf
+
+
 def esb_path(x, side):
     """
     Extended Stern-Brocot tree path for a given number x.
@@ -145,19 +168,17 @@ def esb_path(x, side):
         by something nonzero, so `[0]` is not a possible
         output sequence.
     """
-    if side not in {-1, 0, 1}:
-        raise ValueError("side should be one of -1, 0 or 1")
-    if not (-math.inf, 0) < (x, side) < (math.inf, 0):
-        raise ValueError("Input out of range")
+    n, d = _to_integer_ratio(x)
 
-    if (x, side) < (0, 0):
+    if (n, side) < (0, 0):
         yield 0
-        x, side = -x, -side
+        n, side = -n, -side
 
-    n, d = (1, 0) if x == math.inf else x.as_integer_ratio()
     n += d
     while d < n or side:
         if not d:
+            if side >= 0:
+                raise ValueError("Input out of range")
             yield math.inf
             return
         q, r = divmod(n - (side <= 0), d)
@@ -178,10 +199,7 @@ def from_esb_path(path):
         else:
             a, b, c, d = c, d, a + q * c, b + q * d
 
-    if b + d:
-        return fractions.Fraction(a + c, b + d)
-    else:
-        return math.inf if a + c > 0 else -math.inf
+    return _from_integer_ratio(a + c, b + d)
 
 
 def _common_prefix(path1, path2):
