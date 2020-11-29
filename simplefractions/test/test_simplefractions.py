@@ -4,13 +4,7 @@ import random
 import unittest
 import sys
 
-from simplefractions import (
-    esb_path,
-    float_to_fraction,
-    from_esb_path,
-    interval_rounding_to,
-    simplest_in_interval,
-)
+from simplefractions import simplest_from_float, simplest_in_interval
 
 
 def float_or_inf(frac):
@@ -25,58 +19,6 @@ def float_or_inf(frac):
 
 
 class SimpleFractionsTests(unittest.TestCase):
-    def test_esb_path_zero(self):
-        self.assertEqual(list(esb_path(0, -1)), [0, 1, math.inf])
-        self.assertEqual(list(esb_path(0, 0)), [])
-        self.assertEqual(list(esb_path(0, 1)), [1, math.inf])
-
-    def test_esb_path_infinities(self):
-        self.assertEqual(list(esb_path(math.inf, -1)), [math.inf])
-        with self.assertRaises(ValueError):
-            list(esb_path(math.inf, 0))
-        with self.assertRaises(ValueError):
-            list(esb_path(math.inf, 1))
-        with self.assertRaises(ValueError):
-            list(esb_path(-math.inf, -1))
-        with self.assertRaises(ValueError):
-            list(esb_path(-math.inf, 0))
-        self.assertEqual(list(esb_path(-math.inf, 1)), [0, math.inf])
-
-    def test_roundtrip_through_esb_path(self):
-        test_fractions = [
-            fractions.Fraction(n, d)
-            for n in range(-100, 101)
-            for d in range(1, 101)
-            if math.gcd(n, d) == 1
-        ]
-
-        test_fractions += [
-            # Huge values
-            fractions.Fraction(10 ** 1000),
-            fractions.Fraction(10 ** 1000 + 1),
-            -fractions.Fraction(10 ** 1000),
-            # Tiny values
-            fractions.Fraction(1, 10 ** 1000),
-            fractions.Fraction(1, 10 ** 1000 + 1),
-            -fractions.Fraction(1, 10 ** 1000),
-        ]
-
-        for x in test_fractions:
-            for side in (-1, 0, 1):
-                with self.subTest(x=x, side=side):
-                    y = from_esb_path(esb_path(x, side))
-                    self.assertEqual(y, x)
-
-    def test_esb_roundtrip_for_infinities(self):
-        self.assertEqual(
-            from_esb_path(esb_path(math.inf, -1)),
-            math.inf,
-        )
-        self.assertEqual(
-            from_esb_path(esb_path(-math.inf, 1)),
-            -math.inf,
-        )
-
     def test_simplest_in_closed_interval(self):
         # Round fractions to nearest 1000, see if we can recover them
 
@@ -172,63 +114,16 @@ class SimpleFractionsTests(unittest.TestCase):
         self.assertEqual(simplest_in_interval(-1, False, math.inf, False), 0)
         self.assertEqual(simplest_in_interval(-1, True, math.inf, False), 0)
 
-    def test_interval_rounding_to(self):
-        test_values = [
-            0.1,
-            1.0,
-            2.7,
-            -0.3,
-            0.0,
-            -0.0,
-            sys.float_info.max,
-            -sys.float_info.max,
-            sys.float_info.min,
-            -sys.float_info.min,
-            sys.float_info.min * sys.float_info.epsilon,
-            -sys.float_info.min * sys.float_info.epsilon,
-        ]
-        for value in test_values:
-            with self.subTest(value=value):
-                left, right, closed = interval_rounding_to(value)
-                self.assertIsInstance(left, fractions.Fraction)
-                self.assertIsInstance(right, fractions.Fraction)
-                self.assertLess(left, value)
-                self.assertLess(value, right)
-
-                width = right - left
-                if closed:
-                    self.assertLess(
-                        float_or_inf(left - width / 1000),
-                        value,
-                    )
-                    self.assertEqual(float(left), value)
-                    self.assertEqual(value, float(right))
-                    self.assertLess(
-                        value,
-                        float_or_inf(right + width / 1000),
-                    )
-                else:
-                    self.assertLess(float_or_inf(left), value)
-                    self.assertEqual(
-                        float(left + width / 1000),
-                        value,
-                    )
-                    self.assertEqual(
-                        value,
-                        float(right - width / 1000),
-                    )
-                    self.assertLess(value, float_or_inf(right))
-
-    def test_float_to_fraction_roundtrip(self):
+    def test_simplest_from_float_roundtrip(self):
         test_values = [0.0, 0.3, -0.3, 1e-100, sys.float_info.max]
 
         for value in test_values:
             with self.subTest(value=value):
-                self.assertEqual(float(float_to_fraction(value)), value)
+                self.assertEqual(float(simplest_from_float(value)), value)
 
-    def test_float_to_fraction(self):
+    def test_simplest_from_float(self):
         # Given a fraction n/d (n and d positive),
-        # float_to_fraction(n/d) should give another fraction
+        # simplest_from_float(n/d) should give another fraction
 
         random_test_pairs = [
             (random.randrange(1, 100000), random.randrange(1, 100000))
@@ -238,7 +133,7 @@ class SimpleFractionsTests(unittest.TestCase):
         for n, d in random_test_pairs:
             f = fractions.Fraction(n, d)
             with self.subTest(f=f):
-                self.check_float_to_fraction(f)
+                self.check_simplest_from_float(f)
 
         # Particular test pairs
         test_pairs = [
@@ -249,11 +144,11 @@ class SimpleFractionsTests(unittest.TestCase):
         for n, d in test_pairs:
             f = fractions.Fraction(n, d)
             with self.subTest(f=f):
-                self.check_float_to_fraction(f)
+                self.check_simplest_from_float(f)
 
-    def check_float_to_fraction(self, f):
+    def check_simplest_from_float(self, f):
         """
-        Check that float_to_fraction accurately recovers the given fraction.
+        Check that simplest_from_float accurately recovers the given fraction.
 
         Given a fraction f, convert it to the nearest representable float,
         then convert that float back to the simplest fraction that represents
@@ -265,7 +160,7 @@ class SimpleFractionsTests(unittest.TestCase):
         f : fractions.Fraction
         """
         x = float(f)
-        g = float_to_fraction(x)
+        g = simplest_from_float(x)
         self.assertEqual(float(g), x)
         self.assertSimpler(g, f)
 

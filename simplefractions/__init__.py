@@ -136,7 +136,7 @@ def _from_integer_ratio(n, d):
         return math.inf if n > 0 else -math.inf
 
 
-def esb_path(x, side):
+def _esb_path(x, side):
     """
     Extended Stern-Brocot tree path for a given number x.
 
@@ -186,7 +186,7 @@ def esb_path(x, side):
         n, d, side = d, r + (side <= 0), -side
 
 
-def from_esb_path(path):
+def _from_esb_path(path):
     """
     Reconstruct a number x from its Extended Stern-Brocot tree path.
     """
@@ -222,12 +222,12 @@ def simplest_in_interval(left, left_included, right, right_included):
     if (left, left_side) > (right, right_side):
         raise ValueError("empty interval")
 
-    left_sequence = esb_path(left, left_side)
-    right_sequence = esb_path(right, right_side)
-    return from_esb_path(_common_prefix(left_sequence, right_sequence))
+    left_sequence = _esb_path(left, left_side)
+    right_sequence = _esb_path(right, right_side)
+    return _from_esb_path(_common_prefix(left_sequence, right_sequence))
 
 
-def interval_rounding_to(x):
+def _interval_rounding_to(x):
     """
     Return the interval of numbers that round to a given float.
 
@@ -240,7 +240,7 @@ def interval_rounding_to(x):
         raise ValueError("x should be finite")
 
     if x < 0:
-        left, right, closed = interval_rounding_to(-x)
+        left, right, closed = _interval_rounding_to(-x)
         return -right, -left, closed
 
     if x == 0:
@@ -264,9 +264,9 @@ def interval_rounding_to(x):
     return left, right, closed
 
 
-def float_to_fraction(x):
+def simplest_from_float(x):
     """
     Return the simplest fraction that converts to the given float.
     """
-    left, right, closed = interval_rounding_to(x)
+    left, right, closed = _interval_rounding_to(x)
     return simplest_in_interval(left, closed, right, closed)
