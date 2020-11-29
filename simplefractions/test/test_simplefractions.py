@@ -169,6 +169,10 @@ class SimpleFractionsTests(unittest.TestCase):
             )
         with self.assertRaises(ValueError):
             simplest_in_interval(0, 0, include_left=False, include_right=False)
+        with self.assertRaises(ValueError):
+            simplest_in_interval(0, 0, include_left=False, include_right=True)
+        with self.assertRaises(ValueError):
+            simplest_in_interval(0, 0, include_left=True, include_right=False)
 
     def test_simplest_in_interval(self):
         self.assertEqual(

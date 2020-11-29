@@ -57,7 +57,7 @@ def _to_integer_ratio(x):
     return fx.numerator, fx.denominator
 
 
-def _esb_path(x, side):
+def _esb_path(x, neg):
     """
     Extended Stern-Brocot tree path for a given number x.
 
@@ -66,43 +66,34 @@ def _esb_path(x, side):
     x : number
         Integer, fraction or float. Can also be math.inf
         or -math.inf
-    side : int
-        Either -1, 0 or 1; controls which of the three
-        equivalent paths for a given x is produced.
+    neg : bool
+        Controls which of the two equivalent sequences is produced.
 
     Yields
     ------
-    coeff : int
-        Sequence of coefficients in the tree path, with
-        each coefficient giving the number of times to
-        go left or right. The first coefficient gives
-        the number of steps left, and subsequent coefficients
-        alternative with respect to the direction, so a
-        sequence [0, 3, 5, 2] means: 'take 0 steps left,
-        then 3 steps right, then 5 steps left, then 2 steps
-        right'.
+    coeff : int or math.inf
+        Sequence of coefficients in the tree path, with each coefficient giving
+        the number of times to go left or right. The first coefficient gives
+        the number of steps right, and subsequent coefficients alternate in
+        direction, so a sequence [0, 3, 5, 2] means: 'take 0 steps right, then
+        3 steps left, then 5 steps right, then 2 steps left'.
 
-        The first coefficient generated may be 0,
-        and the last coefficient generated may be math.inf; other
-        than that, all coefficients are positive integers.
-        Additionally, an initial zero is always followed
-        by something nonzero, so `[0]` is not a possible
-        output sequence.
+        The first coefficient generated may be 0, and the last coefficient
+        generated may be math.inf; other than that, all coefficients are
+        positive integers.
+
     """
     n, d = _to_integer_ratio(x)
-
-    if (n, side) < (0, 0):
+    if n < 0 or n == 0 and neg:
         yield 0
-        n, side = -n, -side
+        n, neg = -n, not neg
 
     n += d
-    while d < n or side:
-        if not d:
-            yield math.inf
-            return
-        q, r = divmod(n - (side <= 0), d)
+    while d:
+        q, r = divmod(n - neg, d)
         yield q
-        n, d, side = d, r + (side <= 0), -side
+        n, d, neg = d, r + neg, not neg
+    yield math.inf
 
 
 def _from_esb_path(path):
@@ -115,7 +106,6 @@ def _from_esb_path(path):
             a, c = -a, -c
         else:
             a, b, c, d = c, d, a + q * c, b + q * d
-
     return fractions.Fraction(a + c, b + d)
 
 
@@ -203,14 +193,15 @@ def simplest_in_interval(
     ValueError
         If the interval is empty.
     """
-    left_side = 0 if include_left else 1
-    right_side = 0 if include_right else -1
-    if (left, left_side) > (right, right_side):
-        raise ValueError("empty interval")
+    if left < right or left == right and include_left and include_right:
+        return _from_esb_path(
+            _common_prefix(
+                _esb_path(left, include_left),
+                _esb_path(right, not include_right),
+            )
+        )
 
-    left_sequence = _esb_path(left, left_side)
-    right_sequence = _esb_path(right, right_side)
-    return _from_esb_path(_common_prefix(left_sequence, right_sequence))
+    raise ValueError("empty interval")
 
 
 def simplest_from_float(x: float) -> fractions.Fraction:
