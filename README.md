@@ -1,17 +1,17 @@
-Given fractions *x* and *y*, say that *x* is **simpler** than *y* if when both
+Given fractions *x* and *y*, say that *x* is **simpler** than *y* if, when both
 *x* and *y* are written in lowest terms:
 
 - the numerator of *x* is no larger in absolute value than the numerator of
   *y*, and
 - the denominator of *x* is no larger than the denominator of *y*, and
-- the absolute values of *x* and *y* are not equal to each other
+- *x* and *y* are not equal to each other in absolute value
 
 The **simplefractions** package provides two functions:
 
 - `simplest_from_float` returns, for a given float ``x``, the unique simplest
   fraction with the property that ``float(simplest_from_float(x)) == x``.
 - `simplest_in_interval` returns the unique simplest fraction in a given
-  (open or closed, infinite or bounded) nonempty interval.
+  (open or closed, bounded or unbounded) nonempty interval.
 
 Example usage
 -------------
