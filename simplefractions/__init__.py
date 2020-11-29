@@ -106,7 +106,6 @@ def _from_esb_path(path):
             a, c = -a, -c
         else:
             a, b, c, d = c, d, a + q * c, b + q * d
-
     return fractions.Fraction(a + c, b + d)
 
 
