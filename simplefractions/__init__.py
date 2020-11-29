@@ -72,22 +72,18 @@ def _esb_path(x, side):
 
     Yields
     ------
-    coeff : int
-        Sequence of coefficients in the tree path, with
-        each coefficient giving the number of times to
-        go left or right. The first coefficient gives
-        the number of steps left, and subsequent coefficients
-        alternative with respect to the direction, so a
-        sequence [0, 3, 5, 2] means: 'take 0 steps left,
-        then 3 steps right, then 5 steps left, then 2 steps
-        right'.
+    coeff : int or math.inf
+        Sequence of coefficients in the tree path, with each coefficient giving
+        the number of times to go left or right. The first coefficient gives
+        the number of steps right, and subsequent coefficients alternate in
+        direction, so a sequence [0, 3, 5, 2] means: 'take 0 steps right, then
+        3 steps left, then 5 steps right, then 2 steps left'.
 
-        The first coefficient generated may be 0,
-        and the last coefficient generated may be math.inf; other
-        than that, all coefficients are positive integers.
-        Additionally, an initial zero is always followed
-        by something nonzero, so `[0]` is not a possible
-        output sequence.
+        The first coefficient generated may be 0, and the last coefficient
+        generated may be math.inf; other than that, all coefficients are
+        positive integers. Additionally, an initial zero is always followed by
+        something nonzero, so `[0]` is not a possible output sequence.
+
     """
     n, d = _to_integer_ratio(x)
 
