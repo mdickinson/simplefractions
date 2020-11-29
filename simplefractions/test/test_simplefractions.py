@@ -24,7 +24,7 @@ def float_or_inf(frac):
         return math.inf if frac > 0 else -math.inf
 
 
-class SternBrocotTests(unittest.TestCase):
+class SimpleFractionsTests(unittest.TestCase):
     def test_esb_path_zero(self):
         self.assertEqual(list(esb_path(0, -1)), [0, 1, math.inf])
         self.assertEqual(list(esb_path(0, 0)), [])
