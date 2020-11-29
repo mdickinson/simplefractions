@@ -4,7 +4,7 @@ import random
 import unittest
 import sys
 
-from simpfrac import (
+from simplefractions import (
     esb_path,
     float_to_fraction,
     from_esb_path,
