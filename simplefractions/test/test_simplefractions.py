@@ -146,6 +146,14 @@ class SimpleFractionsTests(unittest.TestCase):
             with self.subTest(f=f):
                 self.check_simplest_from_float(f)
 
+    def test_simplest_from_float_special_values(self):
+        with self.assertRaises(ValueError):
+            simplest_from_float(math.inf)
+        with self.assertRaises(ValueError):
+            simplest_from_float(-math.inf)
+        with self.assertRaises(ValueError):
+            simplest_from_float(math.nan)
+
     def check_simplest_from_float(self, f):
         """
         Check that simplest_from_float accurately recovers the given fraction.

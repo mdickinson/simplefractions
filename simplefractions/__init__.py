@@ -125,17 +125,6 @@ def _to_integer_ratio(x):
         return x.as_integer_ratio()
 
 
-def _from_integer_ratio(n, d):
-    """
-    Convert a pair (n, d) with gcd(n, d) == 1 and d > 0 to
-    a fraction or an infinity.
-    """
-    if d:
-        return fractions.Fraction(n, d)
-    else:
-        return math.inf if n > 0 else -math.inf
-
-
 def _esb_path(x, side):
     """
     Extended Stern-Brocot tree path for a given number x.
@@ -177,8 +166,6 @@ def _esb_path(x, side):
     n += d
     while d < n or side:
         if not d:
-            if side >= 0:
-                raise ValueError("Input out of range")
             yield math.inf
             return
         q, r = divmod(n - (side <= 0), d)
@@ -194,12 +181,10 @@ def _from_esb_path(path):
     for q in path:
         if q == 0:
             a, c = -a, -c
-        elif q == math.inf:
-            a, b = c, d
         else:
             a, b, c, d = c, d, a + q * c, b + q * d
 
-    return _from_integer_ratio(a + c, b + d)
+    return fractions.Fraction(a + c, b + d)
 
 
 def _common_prefix(path1, path2):
@@ -213,20 +198,6 @@ def _common_prefix(path1, path2):
         yield count1
 
 
-def simplest_in_interval(left, left_included, right, right_included):
-    """
-    Return simplest fraction in a given nonempty subinterval.
-    """
-    left_side = 0 if left_included else 1
-    right_side = 0 if right_included else -1
-    if (left, left_side) > (right, right_side):
-        raise ValueError("empty interval")
-
-    left_sequence = _esb_path(left, left_side)
-    right_sequence = _esb_path(right, right_side)
-    return _from_esb_path(_common_prefix(left_sequence, right_sequence))
-
-
 def _interval_rounding_to(x):
     """
     Return the interval of numbers that round to a given float.
@@ -236,9 +207,6 @@ def _interval_rounding_to(x):
     left, right : fractions.Fraction
     closed : bool
     """
-    if not math.isfinite(x):
-        raise ValueError("x should be finite")
-
     if x < 0:
         left, right, closed = _interval_rounding_to(-x)
         return -right, -left, closed
@@ -264,9 +232,26 @@ def _interval_rounding_to(x):
     return left, right, closed
 
 
-def simplest_from_float(x):
+def simplest_in_interval(left, include_left, right, include_right):
+    """
+    Return simplest fraction in a given nonempty subinterval.
+    """
+    left_side = 0 if include_left else 1
+    right_side = 0 if include_right else -1
+    if (left, left_side) > (right, right_side):
+        raise ValueError("empty interval")
+
+    left_sequence = _esb_path(left, left_side)
+    right_sequence = _esb_path(right, right_side)
+    return _from_esb_path(_common_prefix(left_sequence, right_sequence))
+
+
+def simplest_from_float(x: float) -> fractions.Fraction:
     """
     Return the simplest fraction that converts to the given float.
     """
+    if not math.isfinite(x):
+        raise ValueError("x should be finite")
+
     left, right, closed = _interval_rounding_to(x)
     return simplest_in_interval(left, closed, right, closed)
