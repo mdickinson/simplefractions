@@ -13,112 +13,24 @@
 # limitations under the License.
 
 """
-Problem: given smallish, relatively prime integers a and b,
-is it possible to reconstruct a and b from the value a/b?
+Given fractions x = a/b and y = c/d, written in lowest terms in the
+normal way, say that x is *simpler* than y if:
 
-Alternatively: given a finite float x, what's the "simplest" fraction
-a/b such that a/b evaluates to x?
+- abs(a) <= abs(c), and
+- b <= d, and
+- abs(x) != abs(y)
 
-Theory
-------
+Then it can be proved that any subinterval of the real line that contains at
+least one fraction contains a unique simplest fraction - that is, there's a
+fraction x contained in the given interval, such that x is simpler than all
+other fractions in that interval.
 
-The problem reduces to that of finding the simplest fraction in a given
-interval. We can always do this by means of the extended Stern-Brocot tree.
+It follows that given a finite Python float ``f``, there's a unique simplest
+fraction ``x`` such that ``float(x)`` recovers ``f``.
 
-Note: the "extended" terminology here is my own; I don't know whether there's
-an official name for this beast. The original Stern Brocot tree is an
-infinite binary tree whose nodes comprise all *positive* rational numbers.
-The extended Stern Brocot tree is a simple extension whose nodes comprise
-all rational numbers: positive, negative and zero.
-
-The extended Stern-Brocot tree provides a bijection between, on the one hand:
-
-- The set S of all finite strings in the alphabet {'L', 'R'}
-- The set Q of all rational numbers
-
-Notation: write '' for the empty string, and Ls for the concatenation of
-the string 'L' with the string s.
-
-Moreover, we can define a total ordering inductively on the set S.
-For general elements s and t of S, we have:
-
-- If s < t then Ls < Lt and Rs < Rt
-- Ls < '' < Rt
-
-Applying the first property repeatedly, it follows that if s < t then rs < rt
-for any r.
-
-On the other hand, the set Q already has a natural total ordering, and the
-structure of the extended Stern-Brocot tree then guarantees that the bijection
-between S and Q is order-preserving.
-
-We also have a notion of simplicity: given fractions x and y, we say that x is
-"simpler" than y if, when written in lowest terms, |numerator(x)| <=
-|numerator(y)| and denominator(x) <= denominator(y). (Note that the word
-"simpler" isn't ideal here, because by definition x is simpler than itself.)
-Note that this is not a total order: neither of 2/5 or 3/4 is simpler than the
-other. But the only way for both x and y to be simpler than the other is for
-their absolute values to be equal. Note also that 0/1 is simpler than any
-other fraction.
-
-We define "prefix" in the usual way; it does not imply "strict" prefix, so any
-string s in S is considered a prefix of itself. Similarly, "longest common
-prefix" has the obvious meaning.
-
-The Stern-Brocot tree, by construction, has the following property:
-
-Lemma: suppose x and y are fractions corresponding to strings s and t. If
-s is a prefix of t then x is simpler than y.
-
-Moreover, this is strict: if s is a *strict* prefix of t then x is strictly
-simpler than y.
-
-We can use this to find the simplest fraction in an interval:
-
-Lemma: suppose that s and t are in S. Let r be the longest commmon prefix
-of s and t. Then s <= r <= t.
-
-Proof: write s = ru and t = rv. We know that u <= v. It's enough to show
-that u <= '' <= v. We proceed by cases:
-
-- if u and v are both nonempty and start with the same letter, then r was
-  not the longest common prefix of s and t and we have a contradiction
-- if u and v are both nonempty and start with different letter, then u
-  must start with L and v with R (from u <= v), and the result follows
-- if u is empty, then '' <= v follows from u <= v.
-- if v is empty, then u <= '' follows from u <= v.
-
-Lemma: suppose that s and t are in S, and that r is the longest common prefix
-of s and t. Then r is also a prefix of any u in the closed interval [s, t].
-
-Proof: from the definition of the ordering, if s and t both start with L,
-anything between them must also start with L. Similarly for R. So working by
-induction on the length of r, we can strip the common prefix completely to
-reduce to the case where s and t have empty longest common prefix. But then
-the statement is trivial.
-
-Corollary: suppose x and y are rationals with x <= y, that s and t are the
-corresponding strings, and that r is the longest common prefix of s and t.
-Let w be the rational corresponding to r. Then w is the (unique) simplest
-fraction in [x, y].
-
-Dealing with non-closed intervals is slightly messier. Fix a string s in S.
-
-Proposition: s < t if and only if there's a nonnegative integer n such that
-  sRL^n <= t.
-Proof: One way is easy: if sRL^n <= t then s < sRL^n <= t. Now suppose that
-s < t. Let r be the longest common prefix of s and t, so s = ru, t = rv.
-Then ru < rv, so u < v. Now either:
-
-- u is nonempty, in which case it must start with an L, and n = 0 works.
-- u is empty and v starts with an R. Either v = RL^n'' for some n >= 0, or
-  v = RL^nR<tail> for some n >= 0. Either way, we've found our n.
-
-In effect, to find the simplest rational in (s, t], s < t, we want to take the
-longest common prefix of sRL^infinity with t.
-
-Similarly, to find the simplest rational in (s, t), s < t, we take the longest
-common prefix of sRL^infinity with tLR^infinity.
+This module provides two functions: ``simplest_in_subinterval`` finds the
+simplest fraction in a given interval, while ``simplest_from_float`` finds
+the simplest fraction that converts to the given float.
 
 """
 
