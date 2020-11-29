@@ -113,6 +113,10 @@ import math
 import struct
 
 
+#: Names to be exported when doing 'from simplefractions import *'.
+__all__ = ["simplest_from_float", "simplest_in_interval"]
+
+
 def _to_integer_ratio(x):
     """
     Convert a finite number or an infinity to an integer ratio.
@@ -232,9 +236,44 @@ def _interval_rounding_to(x):
     return left, right, closed
 
 
-def simplest_in_interval(left, include_left, right, include_right):
+def simplest_in_interval(
+    left=-math.inf,
+    right=math.inf,
+    *,
+    include_left: bool = False,
+    include_right: bool = False
+):
     """
-    Return simplest fraction in a given nonempty subinterval.
+    Return the simplest fraction in a given interval.
+
+    Given a subinterval of the real line with rational endpoints, return a
+    fraction which is contained in the given interval, and which is simpler
+    than any other fraction contained in the interval.
+
+    Parameters
+    ----------
+    left : int, float or Fraction, optional
+        Left endpoint of the interval. If not provided, the interval is
+        assumed unbounded to the left.
+    right : int, float or Fraction, optional
+        Right endpoint of the interval. If not provided, the interval is
+        assumed unbounded to the right.
+    include_left : bool, optional
+        If True, the left endpoint is included in the interval. The default
+        is False.
+    include_right : bool, optional
+        If True, the right endpoint is included in the interval. The default
+        is False.
+
+    Returns
+    -------
+    fraction.Fraction
+        The simplest fraction in the interval.
+
+    Raises
+    ------
+    ValueError
+        If the interval is empty.
     """
     left_side = 0 if include_left else 1
     right_side = 0 if include_right else -1
@@ -254,4 +293,6 @@ def simplest_from_float(x: float) -> fractions.Fraction:
         raise ValueError("x should be finite")
 
     left, right, closed = _interval_rounding_to(x)
-    return simplest_in_interval(left, closed, right, closed)
+    return simplest_in_interval(
+        left=left, include_left=closed, right=right, include_right=closed
+    )
