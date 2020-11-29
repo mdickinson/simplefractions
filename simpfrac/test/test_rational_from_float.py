@@ -1,11 +1,10 @@
 import fractions
 import math
 import random
-import struct
 import unittest
 import sys
 
-from rational_from_float import (
+from simpfrac import (
     esb_path,
     float_to_fraction,
     from_esb_path,
