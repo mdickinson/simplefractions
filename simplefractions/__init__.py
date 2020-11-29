@@ -105,7 +105,7 @@ def _esb_path(x, side):
 
 def _from_esb_path(path):
     """
-    Reconstruct a number x from its Extended Stern-Brocot tree path.
+    Reconstruct a fraction from a finite Extended Stern-Brocot tree path.
     """
     a, b, c, d = -1, 1, 1, 0
     for q in path:
