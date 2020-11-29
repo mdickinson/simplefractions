@@ -124,4 +124,6 @@ a semi-infinite or infinite interval to be specified:
 Fraction(0, 1)
 >>> simplest_in_interval(left=4, include_left=True)  # simplest in [4, inf)
 Fraction(4, 1)
+>>> simplest_in_interval()  # simplest in (-inf, inf)
+Fraction(0, 1)
 ```
