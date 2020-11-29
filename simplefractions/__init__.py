@@ -49,10 +49,12 @@ def _to_integer_ratio(x):
     """
     if x == math.inf:
         return 1, 0
-    elif x == -math.inf:
+    if x == -math.inf:
         return -1, 0
-    else:
-        return x.as_integer_ratio()
+
+    # Best effort to get a numerator and denominator from x.
+    fx = fractions.Fraction(x)
+    return fx.numerator, fx.denominator
 
 
 def _esb_path(x, side):
