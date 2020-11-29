@@ -42,7 +42,7 @@ class SimpleFractionsTests(unittest.TestCase):
 
             self.assertTrue(x <= d <= y)
 
-            self.assertSimpler(d, c)
+            self.assertSimplerOrEqual(d, c)
 
         F = fractions.Fraction
 
@@ -170,9 +170,9 @@ class SimpleFractionsTests(unittest.TestCase):
         x = float(f)
         g = simplest_from_float(x)
         self.assertEqual(float(g), x)
-        self.assertSimpler(g, f)
+        self.assertSimplerOrEqual(g, f)
 
-    def assertSimpler(self, x, y):
+    def assertSimplerOrEqual(self, x, y):
         """
         Assert that x is at least as simple as y.
         """
