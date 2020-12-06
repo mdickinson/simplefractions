@@ -106,7 +106,7 @@ import math
 import struct
 import typing
 
-from simplefractions.sided_fraction import _simplest_in_interval
+from simplefractions._simplest_in_interval import _simplest_in_interval
 
 
 #: Names to be exported when doing 'from simplefractions import *'.
