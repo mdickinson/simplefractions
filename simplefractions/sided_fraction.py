@@ -1,44 +1,56 @@
+"""
+Core algorithms for computing the simplest fraction in an interval.
+"""
+
 import fractions
-import itertools
 import typing
 
 
-#: Type alias: a path is an iterable of positive integers describing a
-#: run-length-encoded path in the extended Stern-Brocot tree.
-Path = typing.Iterable[int]
-
-
-def _esb_path(n, d, right_side) -> Path:
+def _simplest_in_interval_pos(
+    ln: int, ld: int, lh: bool, rn: int, rd: int, rh: bool
+) -> typing.Tuple[int, int]:
     """
-    Infinite extended Stern-Brocot tree path for a nonnegative sided fraction.
-    """
-    n, d, high = n + d, d, not right_side
-    while d:
-        q, r = divmod(n - high, d)
-        yield q
-        n, d, high = d, r + high, not high
+    Simplest fraction between two other fractions in the positive real line.
 
+    This is the core algorithm. Given a nonempty subinterval of the positive
+    real line whose endpoints are rational numbers, it finds the unique
+    simplest rational number in that subinterval.
 
-def _longest_common_prefix(left_path: Path, right_path: Path) -> Path:
-    """
-    Longest common prefix of two paths.
-    """
-    left_small = True
-    for count1, count2 in itertools.zip_longest(left_path, right_path):
-        yield count1 if left_small else count2
-        if count1 != count2:
-            break
-        left_small = not left_small
+    Parameters
+    ----------
+    ln, ld : int
+        Numerator and denominator of the left endpoint of the interval.
+        Can be 0 and 1 (respectively) to represent zero.
+    lh : bool
+        True if left endpoint is *not* included in the interval, else False.
+        Must be True if the left endpoint is zero.
+    rn, rd : int
+        Numerator and denominator of the right endpoint of the interval.
+        Can be 1 and 0 (respectively) to represent infinity.
+    rh : bool
+        True if the right endpoint *is* included in the interval, else False.
+        Must be False if the right endpoint is infinity.
 
-
-def _from_esb_path(path: Path) -> fractions.Fraction:
+    Returns
+    -------
+    n, d : int
+        Numerator and denominator of the simplest fraction in the interval.
     """
-    Reconstruct a fraction from a finite Extended Stern-Brocot tree path.
-    """
+    ln, ld, lh, rn, rd, rh = ln + ld, ld, not lh, rn + rd, rd, not rh
     a, b, c, d = -1, 1, 1, 0
-    for q in path:
+
+    while ld <= ln - lh:
+        q = (ln - lh) // ld
+        ln, ld, lh, rn, rd, rh = (
+            rd,
+            rn - q * rd,
+            not rh,
+            ld,
+            ln - q * ld,
+            not lh,
+        )
         a, b, c, d = c, d, a + q * c, b + q * d
-    return fractions.Fraction(a + c, b + d)
+    return a + c, b + d
 
 
 def _simplest_in_interval(
@@ -104,10 +116,12 @@ def _simplest_in_interval(
         right_numerator = right_endpoint.numerator
         right_denominator = right_endpoint.denominator
 
-    simplest = _from_esb_path(
-        _longest_common_prefix(
-            _esb_path(left_numerator, left_denominator, not include_left),
-            _esb_path(right_numerator, right_denominator, include_right),
-        )
+    n, d = _simplest_in_interval_pos(
+        left_numerator,
+        left_denominator,
+        not include_left,
+        right_numerator,
+        right_denominator,
+        include_right,
     )
-    return -simplest if left_negative else simplest
+    return fractions.Fraction(-n if left_negative else n, d)
