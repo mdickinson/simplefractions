@@ -34,100 +34,156 @@ the simplest fraction that converts to the given float.
 
 """
 
+# Theory: the Stern-Brocot tree contains every positive rational exactly once.
+# By creating a second copy of the tree for negative numbers and adding
+# an extra node labelled "0" at the top (and connected to the root nodes
+# of the negative and positive trees) we get a infinite full binary tree with
+# nodes labelled by rational numbers, and with every rational number appearing
+# on exactly one node.
+#
+#                                 0
+#                                / \
+#                               /   \
+#                              /     \
+#                             /       \
+#                            /         \
+#                           /           \
+#                          /             \
+#                        -1               1
+#                        / \             / \
+#                       /   \           /   \
+#                      /     \         /     \
+#                    -2     -1/2     1/2      2
+#                    / \     / \     / \     / \
+#                 -3 -3/2 -2/3 -1/3 1/3 2/3 3/2 3
+#                  / \ / \ / \ / \ / \ / \ / \ / \
+#                 .................................
+#
+# Note that each rational in the tree is simpler than all rationals that
+# descend from it.
+#
+# Any infinite string of "L" and "R" characters maps to a path in the tree, by
+# starting from the root node and taking the left or right branch at each node
+# as dictated by successive characters in the string. As the path passes
+# through the nodes it generates a sequence of rationals, and that sequence
+# converges to a limit in ℝ ∪ {-∞, ∞}. So we get a mapping from those infinite
+# strings to ℝ ∪ {-∞, ∞}. That mapping is order-preserving with respect to the
+# lexicographic order on the strings, and it's surjective but not injective:
+# irrationals and infinites each arise from a single infinite string, but each
+# rational is the image of two infinite strings, of the form <p>LRRR... and
+# <p>RLLL..., where <p> is the finite path to the position of that rational in
+# the tree.
+#
+# Call the two infinite string representations of a rational number the *left*
+# and *right* representations respectively (the left one ending in LRRR..., and
+# the right one ending in RLLL...).
+#
+# Example: the fraction 2/3 has representations RLRLRRR... and RLRRLLL...
+# as an infinite string.
+#
+# The task of finding the (unique) simplest rational in an interval reduces to
+# the task of finding the longest common prefix of the corresponding paths. In
+# more detail, to find the unique simplest rational in a closed interval [x, y]
+# with x <= y rational numbers, find the left representation of x and the right
+# representation of y, take the longest common prefix (which will be a finite
+# string of Ls and Rs), and take the rational corresponding to that path. For
+# an open interval (x, y) with x < y, do the same but start instead with the
+# right representation of x and the left representation of y. Extend in the
+# obvious way for infinite endpoints or half-open intervals.
+#
+# Practical computation requires an efficient representation of the paths. We
+# use run-length encoding: each path is represented by a sequence of positive
+# integers giving the numbers of Ls and Rs, augmented by a math.inf marker
+# indicating an infinite tail of Ls or Rs. We also need to indicate whether
+# each sequence starts with a run of Ls or a run or Rs.
+#
+# Example: the fraction 2/3 is represented by the sequences [1, 1, 1, 1, inf]
+# and [1, 1, 2, inf] of path lengths, starting with a sequence of "R" steps
+# in each case.
+
 import fractions
 import math
 import struct
+import typing
+
+from simplefractions.sided_fraction import _simplest_in_interval
 
 
 #: Names to be exported when doing 'from simplefractions import *'.
 __all__ = ["simplest_from_float", "simplest_in_interval"]
 
 
-def _to_integer_ratio(x):
+def simplest_in_interval(
+    left=None,
+    right=None,
+    *,
+    include_left: bool = False,
+    include_right: bool = False,
+):
     """
-    Convert a finite number or an infinity to an integer ratio.
-    """
-    if x == math.inf:
-        return 1, 0
-    if x == -math.inf:
-        return -1, 0
+    Return the simplest fraction in a given interval.
 
-    # Best effort to get a numerator and denominator from x.
-    fx = fractions.Fraction(x)
-    return fx.numerator, fx.denominator
-
-
-def _esb_path(x, neg):
-    """
-    Extended Stern-Brocot tree path for a given number x.
+    Given a subinterval of the real line with rational endpoints, return a
+    fraction which is contained in the given interval, and which is simpler
+    than any other fraction contained in the interval.
 
     Parameters
     ----------
-    x : number
-        Integer, fraction or float. Can also be math.inf
-        or -math.inf
-    neg : bool
-        Controls which of the two equivalent sequences is produced.
+    left : int, float or Fraction, optional
+        Left endpoint of the interval. If not provided, the interval is
+        assumed unbounded to the left.
+    right : int, float or Fraction, optional
+        Right endpoint of the interval. If not provided, the interval is
+        assumed unbounded to the right.
+    include_left : bool, optional
+        If True, the left endpoint is included in the interval. The default
+        is False. If the left endpoint is missing, include_left must be False.
+    include_right : bool, optional
+        If True, the right endpoint is included in the interval. The default
+        is False. If the right endpoint is missing, include_right must be
+        False.
 
-    Yields
+    Returns
+    -------
+    fraction.Fraction
+        The simplest fraction in the interval.
+
+    Raises
     ------
-    coeff : int or math.inf
-        Sequence of coefficients in the tree path, with each coefficient giving
-        the number of times to go left or right. The first coefficient gives
-        the number of steps right, and subsequent coefficients alternate in
-        direction, so a sequence [0, 3, 5, 2] means: 'take 0 steps right, then
-        3 steps left, then 5 steps right, then 2 steps left'.
-
-        The first coefficient generated may be 0, and the last coefficient
-        generated may be math.inf; other than that, all coefficients are
-        positive integers.
-
+    ValueError
+        If the interval is empty.
     """
-    n, d = _to_integer_ratio(x)
-    if n < 0 or n == 0 and neg:
-        yield 0
-        n, neg = -n, not neg
+    # Backwards compatibility
+    if left == -math.inf:
+        left = None
+    if right == math.inf:
+        right = None
 
-    n += d
-    while d:
-        q, r = divmod(n - neg, d)
-        yield q
-        n, d, neg = d, r + neg, not neg
-    yield math.inf
+    # Convert floats, Decimal instances, integers, etc. to the
+    # corresponding Fraction.
+    if left is not None:
+        left = fractions.Fraction(left)
+    if right is not None:
+        right = fractions.Fraction(right)
 
-
-def _from_esb_path(path):
-    """
-    Reconstruct a fraction from a finite Extended Stern-Brocot tree path.
-    """
-    a, b, c, d = -1, 1, 1, 0
-    for q in path:
-        if q == 0:
-            a, c = -a, -c
-        else:
-            a, b, c, d = c, d, a + q * c, b + q * d
-    return fractions.Fraction(a + c, b + d)
+    return _simplest_in_interval(
+        left, right, include_left=include_left, include_right=include_right
+    )
 
 
-def _common_prefix(path1, path2):
-    """
-    Longest common prefix of two paths.
-    """
-    for count1, count2 in zip(path1, path2):
-        if count1 != count2:
-            yield min(count1, count2)
-            break
-        yield count1
-
-
-def _interval_rounding_to(x):
+def _interval_rounding_to(
+    x: float,
+) -> typing.Tuple[fractions.Fraction, fractions.Fraction, bool]:
     """
     Return the interval of numbers that round to a given float.
 
     Returns
     -------
     left, right : fractions.Fraction
+        Endpoints of the interval of all numbers that round to x
+        under the standard round-ties-to-even rounding mode.
     closed : bool
+        True if the interval is closed at both ends, else False.
     """
     if x < 0:
         left, right, closed = _interval_rounding_to(-x)
@@ -154,56 +210,6 @@ def _interval_rounding_to(x):
     return left, right, closed
 
 
-def simplest_in_interval(
-    left=-math.inf,
-    right=math.inf,
-    *,
-    include_left: bool = False,
-    include_right: bool = False
-):
-    """
-    Return the simplest fraction in a given interval.
-
-    Given a subinterval of the real line with rational endpoints, return a
-    fraction which is contained in the given interval, and which is simpler
-    than any other fraction contained in the interval.
-
-    Parameters
-    ----------
-    left : int, float or Fraction, optional
-        Left endpoint of the interval. If not provided, the interval is
-        assumed unbounded to the left.
-    right : int, float or Fraction, optional
-        Right endpoint of the interval. If not provided, the interval is
-        assumed unbounded to the right.
-    include_left : bool, optional
-        If True, the left endpoint is included in the interval. The default
-        is False.
-    include_right : bool, optional
-        If True, the right endpoint is included in the interval. The default
-        is False.
-
-    Returns
-    -------
-    fraction.Fraction
-        The simplest fraction in the interval.
-
-    Raises
-    ------
-    ValueError
-        If the interval is empty.
-    """
-    if left < right or left == right and include_left and include_right:
-        return _from_esb_path(
-            _common_prefix(
-                _esb_path(left, include_left),
-                _esb_path(right, not include_right),
-            )
-        )
-
-    raise ValueError("empty interval")
-
-
 def simplest_from_float(x: float) -> fractions.Fraction:
     """
     Return the simplest fraction that converts to the given float.
@@ -212,6 +218,6 @@ def simplest_from_float(x: float) -> fractions.Fraction:
         raise ValueError("x should be finite")
 
     left, right, closed = _interval_rounding_to(x)
-    return simplest_in_interval(
-        left=left, include_left=closed, right=right, include_right=closed
+    return _simplest_in_interval(
+        left, right, include_left=closed, include_right=closed
     )
