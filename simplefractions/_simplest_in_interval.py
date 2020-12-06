@@ -28,7 +28,7 @@ def _simplest_in_interval_pos(
         Numerator and denominator of the right endpoint of the interval.
         Can be 1 and 0 (respectively) to represent infinity.
     rh : bool
-        True if the right endpoint *is* included in the interval, else False.
+        True if the right endpoint is included in the interval, else False.
         Must be False if the right endpoint is infinity.
 
     Returns
