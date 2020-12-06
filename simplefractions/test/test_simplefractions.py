@@ -276,6 +276,12 @@ class SimpleFractionsTests(unittest.TestCase):
         self.assertEqual(simplest_in_interval(right=3.5), 0)
         self.assertEqual(simplest_in_interval(), 0)
 
+    def test_simplest_in_interval_closed_infinity(self):
+        with self.assertRaises(ValueError):
+            simplest_in_interval(None, 2, include_left=True)
+        with self.assertRaises(ValueError):
+            simplest_in_interval(2, None, include_right=True)
+
     def check_simplest_from_float(self, f):
         """
         Check that simplest_from_float accurately recovers the given fraction.
