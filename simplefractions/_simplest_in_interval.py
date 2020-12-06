@@ -22,8 +22,8 @@ def _simplest_in_interval_pos(
         Numerator and denominator of the left endpoint of the interval.
         Can be 0 and 1 (respectively) to represent zero.
     lh : bool
-        True if left endpoint is *not* included in the interval, else False.
-        Must be True if the left endpoint is zero.
+        True if left endpoint is included in the interval, else False.
+        Must be False if the left endpoint is zero.
     rn, rd : int
         Numerator and denominator of the right endpoint of the interval.
         Can be 1 and 0 (respectively) to represent infinity.
@@ -36,19 +36,11 @@ def _simplest_in_interval_pos(
     n, d : int
         Numerator and denominator of the simplest fraction in the interval.
     """
-    ln, ld, lh, rn, rd, rh = ln + ld, ld, not lh, rn + rd, rd, not rh
+    ln, rn, rh = ln + ld, rn + rd, not rh
     a, b, c, d = -1, 1, 1, 0
-
     while ld <= ln - lh:
         q = (ln - lh) // ld
-        ln, ld, lh, rn, rd, rh = (
-            rd,
-            rn - q * rd,
-            not rh,
-            ld,
-            ln - q * ld,
-            not lh,
-        )
+        ln, ld, lh, rn, rd, rh = rd, rn - q * rd, not rh, ld, ln - q * ld, not lh
         a, b, c, d = c, d, a + q * c, b + q * d
     return a + c, b + d
 
@@ -108,9 +100,7 @@ def _simplest_in_interval(
     # Reduce to the case of a positive interval.
     left_negative = left is None or left < 0 or (left == 0 and include_left)
     if left_negative:
-        right_positive = (
-            right is None or 0 < right or (0 == right and include_right)
-        )
+        right_positive = right is None or 0 < right or (0 == right and include_right)
         if right_positive:
             return fractions.Fraction(0, 1)
 
@@ -127,7 +117,7 @@ def _simplest_in_interval(
     n, d = _simplest_in_interval_pos(
         left.numerator,
         left.denominator,
-        not include_left,
+        include_left,
         1 if right is None else right.numerator,
         0 if right is None else right.denominator,
         include_right,

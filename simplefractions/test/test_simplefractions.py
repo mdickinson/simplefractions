@@ -41,9 +41,7 @@ class SimpleFractionsTests(unittest.TestCase):
             # in [x, y] must be at least as simple as c.
             self.assertTrue(x <= c <= y)
 
-            d = simplest_in_interval(
-                x, y, include_left=True, include_right=True
-            )
+            d = simplest_in_interval(x, y, include_left=True, include_right=True)
 
             self.assertTrue(x <= d <= y)
 
@@ -176,9 +174,7 @@ class SimpleFractionsTests(unittest.TestCase):
 
     def test_simplest_in_interval(self):
         self.assertEqual(
-            simplest_in_interval(
-                3, 4, include_left=False, include_right=False
-            ),
+            simplest_in_interval(3, 4, include_left=False, include_right=False),
             3.5,
         )
         self.assertEqual(
@@ -195,15 +191,11 @@ class SimpleFractionsTests(unittest.TestCase):
             4,
         )
         self.assertEqual(
-            simplest_in_interval(
-                0, math.inf, include_left=True, include_right=False
-            ),
+            simplest_in_interval(0, math.inf, include_left=True, include_right=False),
             0,
         )
         self.assertEqual(
-            simplest_in_interval(
-                0, math.inf, include_left=False, include_right=False
-            ),
+            simplest_in_interval(0, math.inf, include_left=False, include_right=False),
             1,
         )
         self.assertEqual(
@@ -216,9 +208,7 @@ class SimpleFractionsTests(unittest.TestCase):
             0,
         )
         self.assertEqual(
-            simplest_in_interval(
-                -1, math.inf, include_left=True, include_right=False
-            ),
+            simplest_in_interval(-1, math.inf, include_left=True, include_right=False),
             0,
         )
 

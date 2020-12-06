@@ -218,6 +218,4 @@ def simplest_from_float(x: float) -> fractions.Fraction:
         raise ValueError("x should be finite")
 
     left, right, closed = _interval_rounding_to(x)
-    return _simplest_in_interval(
-        left, right, include_left=closed, include_right=closed
-    )
+    return _simplest_in_interval(left, right, include_left=closed, include_right=closed)
