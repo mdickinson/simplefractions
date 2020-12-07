@@ -10,20 +10,23 @@ def _simplest_in_interval_pos(
     ln: int, ld: int, lh: bool, rn: int, rd: int, rh: bool
 ) -> typing.Tuple[int, int]:
     """
-    Simplest fraction between two other fractions in the positive real line.
+    Simplest fraction between two other fractions in the real line.
 
     This is the core algorithm. Given a nonempty, possibly infinite,
-    subinterval of the positive real line whose endpoints are rational numbers,
+    subinterval of the real line whose endpoints are rational numbers,
     it finds the unique simplest rational number in that subinterval.
+
+    The algorithm is not quite fully general: it requires the right endpoint
+    of the interval to be positive (or zero, with rh being True).
 
     Parameters
     ----------
     ln, ld : int
         Numerator and denominator of the left endpoint of the interval.
-        Can be 0 and 1 (respectively) to represent zero.
+        Can be -1 and 0 (respectively) to represent -infinity.
     lh : bool
         True if left endpoint is included in the interval, else False.
-        Must be False if the left endpoint is zero.
+        Must be False if the left endpoint is -infinity.
     rn, rd : int
         Numerator and denominator of the right endpoint of the interval.
         Can be 1 and 0 (respectively) to represent infinity.
@@ -36,11 +39,10 @@ def _simplest_in_interval_pos(
     n, d : int
         Numerator and denominator of the simplest fraction in the interval.
     """
-    ln, rn, rh = ln + ld, rn + rd, not rh
-    a, b, c, d = -1, 1, 1, 0
+    ln, rn, a, b, c, d = ln + ld, rn + rd, -1, 1, 1, 0
     while ld <= ln - lh:
         q = (ln - lh) // ld
-        ln, ld, lh, rn, rd, rh = rd, rn - q * rd, not rh, ld, ln - q * ld, not lh
+        ln, ld, lh, rn, rd, rh = rd, rn - q * rd, rh, ld, ln - q * ld, lh
         a, b, c, d = c, d, a + q * c, b + q * d
     return a + c, b + d
 
@@ -97,29 +99,20 @@ def _simplest_in_interval(
     if not nonempty_interval:
         raise ValueError("empty interval")
 
-    # Reduce to the case of a positive interval.
-    left_negative = left is None or left < 0 or (left == 0 and include_left)
-    if left_negative:
-        right_positive = right is None or 0 < right or (0 == right and include_right)
-        if right_positive:
-            return fractions.Fraction(0, 1)
-
-        # Now both left and right are negative; negate and swap.
-        assert right is not None
-        left, right = (
-            -right,
-            None if left is None else -left,
-        )
+    # The core routine works provided that the right endpoint is positive.
+    # If not, we negate the interval.
+    negate = right is not None and (right < 0 or (right == 0 and not include_right))
+    if negate:
+        assert right is not None  # help mypy out
+        left, right = -right, None if left is None else -left
         include_left, include_right = include_right, include_left
 
-    assert left is not None
-
     n, d = _simplest_in_interval_pos(
-        left.numerator,
-        left.denominator,
+        -1 if left is None else left.numerator,
+        0 if left is None else left.denominator,
         include_left,
         1 if right is None else right.numerator,
         0 if right is None else right.denominator,
         include_right,
     )
-    return fractions.Fraction(-n if left_negative else n, d)
+    return fractions.Fraction(-n if negate else n, d)
