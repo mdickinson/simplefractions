@@ -31,75 +31,7 @@ fraction ``x`` such that ``float(x)`` recovers ``f``.
 This module provides two functions: ``simplest_in_subinterval`` finds the
 simplest fraction in a given interval, while ``simplest_from_float`` finds
 the simplest fraction that converts to the given float.
-
 """
-
-# Theory: the Stern-Brocot tree contains every positive rational exactly once.
-# By creating a second copy of the tree for negative numbers and adding
-# an extra node labelled "0" at the top (and connected to the root nodes
-# of the negative and positive trees) we get a infinite full binary tree with
-# nodes labelled by rational numbers, and with every rational number appearing
-# on exactly one node.
-#
-#                                 0
-#                                / \
-#                               /   \
-#                              /     \
-#                             /       \
-#                            /         \
-#                           /           \
-#                          /             \
-#                        -1               1
-#                        / \             / \
-#                       /   \           /   \
-#                      /     \         /     \
-#                    -2     -1/2     1/2      2
-#                    / \     / \     / \     / \
-#                 -3 -3/2 -2/3 -1/3 1/3 2/3 3/2 3
-#                  / \ / \ / \ / \ / \ / \ / \ / \
-#                 .................................
-#
-# Note that each rational in the tree is simpler than all rationals that
-# descend from it.
-#
-# Any infinite string of "L" and "R" characters maps to a path in the tree, by
-# starting from the root node and taking the left or right branch at each node
-# as dictated by successive characters in the string. As the path passes
-# through the nodes it generates a sequence of rationals, and that sequence
-# converges to a limit in ℝ ∪ {-∞, ∞}. So we get a mapping from those infinite
-# strings to ℝ ∪ {-∞, ∞}. That mapping is order-preserving with respect to the
-# lexicographic order on the strings, and it's surjective but not injective:
-# irrationals and infinites each arise from a single infinite string, but each
-# rational is the image of two infinite strings, of the form <p>LRRR... and
-# <p>RLLL..., where <p> is the finite path to the position of that rational in
-# the tree.
-#
-# Call the two infinite string representations of a rational number the *left*
-# and *right* representations respectively (the left one ending in LRRR..., and
-# the right one ending in RLLL...).
-#
-# Example: the fraction 2/3 has representations RLRLRRR... and RLRRLLL...
-# as an infinite string.
-#
-# The task of finding the (unique) simplest rational in an interval reduces to
-# the task of finding the longest common prefix of the corresponding paths. In
-# more detail, to find the unique simplest rational in a closed interval [x, y]
-# with x <= y rational numbers, find the left representation of x and the right
-# representation of y, take the longest common prefix (which will be a finite
-# string of Ls and Rs), and take the rational corresponding to that path. For
-# an open interval (x, y) with x < y, do the same but start instead with the
-# right representation of x and the left representation of y. Extend in the
-# obvious way for infinite endpoints or half-open intervals.
-#
-# Practical computation requires an efficient representation of the paths. We
-# use run-length encoding: each path is represented by a sequence of positive
-# integers giving the numbers of Ls and Rs, augmented by a math.inf marker
-# indicating an infinite tail of Ls or Rs. We also need to indicate whether
-# each sequence starts with a run of Ls or a run or Rs.
-#
-# Example: the fraction 2/3 is represented by the sequences [1, 1, 1, 1, inf]
-# and [1, 1, 2, inf] of path lengths, starting with a sequence of "R" steps
-# in each case.
 
 import fractions
 import math
