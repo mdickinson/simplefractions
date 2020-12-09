@@ -1,10 +1,21 @@
-Given fractions *x* and *y*, say that *x* is **simpler** than *y* if, when both
-*x* and *y* are written in lowest terms:
+The **simplefractions** package finds the simplest fraction that converts
+to a given float, or more generally, the simplest fraction that lies within
+a given interval.
 
-- the numerator of *x* is no larger in absolute value than the numerator of
-  *y*, and
-- the denominator of *x* is no larger than the denominator of *y*, and
-- *x* and *y* are not equal to each other in absolute value
+**Definition.** Given fractions *x = a/b* and *y = c/d* (written in lowest
+terms with positive denominators), say that *x* is **simpler** than *y* if
+*abs(a) <= abs(c)*, *b <= d*, and at least one of these two inequalities
+is strict.
+
+For example, 22/7 is simpler than 23/8, but neither of 3/8 and 4/7 is
+simpler than the other.
+
+Then it's a theorem that given any subinterval *I* of the real line that
+contains at least one fraction, that interval contains a unique simplest
+fraction. That is, there's a fraction *a/b* in *I* such that *a/b* is
+simpler (in the above sense) than all other fractions in *I*. As a
+consequence, for any given finite Python float *x*, there's a unique
+simplest fraction that rounds to that float.
 
 The **simplefractions** package provides two functions:
 
@@ -89,6 +100,15 @@ last place) in either direction. `simplest_from_float` can't do that, but
 >>> from math import ulp
 >>> x = 1.1 + 2.2
 >>> simplest_in_interval(x - 5*ulp(x), x + 5*ulp(x))
+Fraction(33, 10)
+```
+
+Alternatively, you might ask for the simplest fraction approximating `x`
+with a relative error of at most 0.000001:
+
+```python
+>>> relerr = 1e-6
+>>> simplest_in_interval(x - relerr*x, x + relerr*x)
 Fraction(33, 10)
 ```
 
