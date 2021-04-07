@@ -32,8 +32,8 @@ Start by importing the functions from the module:
 >>> from simplefractions import *
 ```
 
-The `simplest_from_float` takes a single finite float `x` and produces a
-`Fraction` object that recovers that float:
+The `simplest_from_float` function takes a single finite float `x` and
+produces a `Fraction` object that recovers that float:
 
 ```python
 >>> simplest_from_float(0.25)
