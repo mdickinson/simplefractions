@@ -15,8 +15,8 @@
 import fractions
 import math
 import random
-import unittest
 import sys
+import unittest
 
 from simplefractions import simplest_from_float, simplest_in_interval
 
