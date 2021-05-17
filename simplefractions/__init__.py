@@ -40,7 +40,6 @@ import typing
 
 from simplefractions._simplest_in_interval import _simplest_in_interval
 
-
 #: Names to be exported when doing 'from simplefractions import *'.
 __all__ = ["simplest_from_float", "simplest_in_interval"]
 
