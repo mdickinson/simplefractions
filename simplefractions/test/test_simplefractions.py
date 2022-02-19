@@ -22,7 +22,7 @@ from simplefractions import simplest_from_float, simplest_in_interval
 
 
 class SimpleFractionsTests(unittest.TestCase):
-    def test_simplest_in_closed_interval(self):
+    def test_simplest_in_closed_interval(self) -> None:
         # Round fractions to nearest 1000, see if we can recover them
 
         test_fractions = [
@@ -64,7 +64,7 @@ class SimpleFractionsTests(unittest.TestCase):
             0,
         )
 
-    def test_simplest_in_open_interval(self):
+    def test_simplest_in_open_interval(self) -> None:
         F = fractions.Fraction
 
         self.assertEqual(
@@ -172,7 +172,7 @@ class SimpleFractionsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             simplest_in_interval(0, 0, include_left=True, include_right=False)
 
-    def test_simplest_in_interval(self):
+    def test_simplest_in_interval(self) -> None:
         self.assertEqual(
             simplest_in_interval(3, 4, include_left=False, include_right=False),
             3.5,
@@ -212,14 +212,14 @@ class SimpleFractionsTests(unittest.TestCase):
             0,
         )
 
-    def test_simplest_from_float_roundtrip(self):
+    def test_simplest_from_float_roundtrip(self) -> None:
         test_values = [0.0, 0.3, -0.3, 1e-100, sys.float_info.max]
 
         for value in test_values:
             with self.subTest(value=value):
                 self.assertEqual(float(simplest_from_float(value)), value)
 
-    def test_simplest_from_float(self):
+    def test_simplest_from_float(self) -> None:
         # Given a fraction n/d (n and d positive),
         # simplest_from_float(n/d) should give another fraction
 
@@ -235,8 +235,8 @@ class SimpleFractionsTests(unittest.TestCase):
 
         # Particular test pairs
         test_pairs = [
-            0.3 .as_integer_ratio(),
-            1.4 .as_integer_ratio(),
+            (0.3).as_integer_ratio(),
+            (1.4).as_integer_ratio(),
         ]
 
         for n, d in test_pairs:
@@ -244,7 +244,7 @@ class SimpleFractionsTests(unittest.TestCase):
             with self.subTest(f=f):
                 self.check_simplest_from_float(f)
 
-    def test_simplest_from_float_special_values(self):
+    def test_simplest_from_float_special_values(self) -> None:
         with self.assertRaises(ValueError):
             simplest_from_float(math.inf)
         with self.assertRaises(ValueError):
@@ -252,7 +252,7 @@ class SimpleFractionsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             simplest_from_float(math.nan)
 
-    def test_simplest_in_interval_defaults(self):
+    def test_simplest_in_interval_defaults(self) -> None:
         # By default, assumes an open interval.
         self.assertEqual(simplest_in_interval(3, 5), 4)
         self.assertEqual(simplest_in_interval(3, 5, include_left=True), 3)
@@ -266,13 +266,13 @@ class SimpleFractionsTests(unittest.TestCase):
         self.assertEqual(simplest_in_interval(right=3.5), 0)
         self.assertEqual(simplest_in_interval(), 0)
 
-    def test_simplest_in_interval_closed_infinity(self):
+    def test_simplest_in_interval_closed_infinity(self) -> None:
         with self.assertRaises(ValueError):
             simplest_in_interval(None, 2, include_left=True)
         with self.assertRaises(ValueError):
             simplest_in_interval(2, None, include_right=True)
 
-    def check_simplest_from_float(self, f):
+    def check_simplest_from_float(self, f: fractions.Fraction) -> None:
         """
         Check that simplest_from_float accurately recovers the given fraction.
 
@@ -290,7 +290,9 @@ class SimpleFractionsTests(unittest.TestCase):
         self.assertEqual(float(g), x)
         self.assertSimplerOrEqual(g, f)
 
-    def assertSimplerOrEqual(self, x, y):
+    def assertSimplerOrEqual(
+        self, x: fractions.Fraction, y: fractions.Fraction
+    ) -> None:
         """
         Assert that x is either simpler than, or equal to, y.
         """
