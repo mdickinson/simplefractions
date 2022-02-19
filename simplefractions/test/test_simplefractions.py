@@ -235,8 +235,8 @@ class SimpleFractionsTests(unittest.TestCase):
 
         # Particular test pairs
         test_pairs = [
-            0.3 .as_integer_ratio(),
-            1.4 .as_integer_ratio(),
+            (0.3).as_integer_ratio(),
+            (1.4).as_integer_ratio(),
         ]
 
         for n, d in test_pairs:
