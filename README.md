@@ -88,7 +88,7 @@ Fraction(675539944105597, 204709073971393)
 
 You might have expected `Fraction(33, 10)` here, but when converted to float,
 that gives a value very close to, but not exactly equal to, `x`. In contrast,
-the return value of `simplest_from_float(x)` will always product exactly `x`
+the return value of `simplest_from_float(x)` will always produce exactly `x`
 when converted to `float`.
 
 To fix this, you might want to ask for the simplest float that lies within
