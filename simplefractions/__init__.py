@@ -33,8 +33,10 @@ simplest fraction in a given interval, while ``simplest_from_float`` finds
 the simplest fraction that converts to the given float.
 """
 
+import decimal
 import fractions
 import math
+import numbers
 import struct
 import typing
 
@@ -44,13 +46,18 @@ from simplefractions._simplest_in_interval import _simplest_in_interval
 __all__ = ["simplest_from_float", "simplest_in_interval"]
 
 
+#: Type that roughly matches "number acceptable by the fractions.Fraction
+#: constructor"
+FractionCompatible = typing.Union[int, float, decimal.Decimal, numbers.Rational]
+
+
 def simplest_in_interval(
-    left=None,
-    right=None,
+    left: typing.Optional[FractionCompatible] = None,
+    right: typing.Optional[FractionCompatible] = None,
     *,
     include_left: bool = False,
     include_right: bool = False,
-):
+) -> fractions.Fraction:
     """
     Return the simplest fraction in a given interval.
 
@@ -76,7 +83,7 @@ def simplest_in_interval(
 
     Returns
     -------
-    fraction.Fraction
+    fractions.Fraction
         The simplest fraction in the interval.
 
     Raises
