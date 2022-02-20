@@ -28,7 +28,7 @@ other fractions in that interval.
 It follows that given a finite Python float ``f``, there's a unique simplest
 fraction ``x`` such that ``float(x)`` recovers ``f``.
 
-This module provides two functions: ``simplest_in_subinterval`` finds the
+This module provides two functions: ``simplest_in_interval`` finds the
 simplest fraction in a given interval, while ``simplest_from_float`` finds
 the simplest fraction that converts to the given float.
 """
