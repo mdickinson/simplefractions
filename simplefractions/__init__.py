@@ -37,6 +37,7 @@ import decimal
 import fractions
 import math
 import numbers
+import re
 import struct
 import typing
 
@@ -146,6 +147,92 @@ def _interval_rounding_to(
         right = (fractions.Fraction(x) + fractions.Fraction(x_plus)) / 2
 
     return left, right, closed
+
+
+def _interval_rounding_to_str(
+    x: str,
+) -> typing.Tuple[fractions.Fraction, fractions.Fraction]:
+    """
+    Return the interval of numbers that round to a given number
+    expressed as a string.  It is not specified whether the interval
+    includes the endpoints, which is left to the user and the rounding
+    convention to be employed.
+
+    Returns
+    -------
+    left, right : fractions.Fraction
+        Endpoints of the interval of all numbers that round to x
+
+    Raises
+    ------
+    ValueError
+        If the input str is not recognized as representing a number.
+    """
+
+    # If supplied string is malformed, this will throw an exception
+    x_fraction = fractions.Fraction(x)
+
+    # If `x` is positive then we can figure the right end of the rounding interval by
+    # attaching a "5" suffix to the mantissa.  If the mantissa does not include a
+    # decimal point then append a decimal point before appending the "5".
+    right = re.sub(
+        r"^([+-]?[0-9_]*)(\.([0-9_]*))?([eE][+-]?[0-9_]+)?$", r"\g<1>.\g<3>5\g<4>", x
+    )
+    if right == x:
+        raise ValueError(f"x ({x}) not recognized as a decimal number")
+    right_fraction = fractions.Fraction(right)
+
+    # The left side of the rounding interval is equidistant from the x, but on the other
+    # side.
+    left_fraction = 2 * x_fraction - right_fraction
+
+    # If `x` is negative, we have left and right swapped
+    if left_fraction > right_fraction:
+        (left_fraction, right_fraction) = (right_fraction, left_fraction)
+    return left_fraction, right_fraction
+
+
+def _interval_truncating_to_str(
+    x: str,
+) -> typing.Tuple[fractions.Fraction, fractions.Fraction]:
+    """
+    Return the interval of numbers that truncate to a given number
+    expressed as a string.  It is not specified whether the interval
+    includes the endpoints, which is left to the user and the
+    truncation convention to be employed.
+
+    Returns
+    -------
+    left, right : fractions.Fraction
+        Endpoints of the interval of all numbers that truncate to x
+
+    Raises
+    ------
+    ValueError
+        If the input str is not recognized as representing a number.
+    """
+
+    # If supplied string is malformed, this will throw an exception
+    left_fraction = fractions.Fraction(x)
+
+    # If `x` is positive then we can figure the midpoint of the truncation interval by
+    # attaching a "5" suffix to the mantissa.  If the mantissa does not include a
+    # decimal point then append a decimal point before appending the "5".
+    midpoint = re.sub(
+        r"^([+-]?[0-9_]*)(\.([0-9_]*))?([eE][+-]?[0-9_]+)?$", r"\g<1>.\g<3>5\g<4>", x
+    )
+    if midpoint == x:
+        raise ValueError(f"x ({x}) not recognized as a decimal number")
+    midpoint_fraction = fractions.Fraction(midpoint)
+
+    # The far side of the truncation interval is equidistant from the x, but on the
+    # other side.
+    right_fraction = 2 * midpoint_fraction - left_fraction
+
+    # If `x` is negative, we have left and right swapped
+    if left_fraction > right_fraction:
+        (left_fraction, right_fraction) = (right_fraction, left_fraction)
+    return left_fraction, right_fraction
 
 
 def simplest_from_float(x: float) -> fractions.Fraction:
