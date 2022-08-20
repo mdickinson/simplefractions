@@ -74,7 +74,8 @@
     Swapping $a/b$ and $c/d$ if necessary, we can assume that $d \le b$, so
     from $2^{52} \le bd$ we have $2^{26} \le b \le a$. Now it's possible to do
     an exhaustive search over all pairs $(a, b)$ of integers satisfying
-    $$ 2^{26} \le b \le a \le 67114657.$$ There are exactly $16788115$ such
+    \[2^{26} \le b \le a \le 67114657.\]
+    There are exactly $16788115$ such
     pairs (reducing to $10204542$ after we discard those with $\gcd(a, b) \ne
     1$), making this search computationally very feasible. For each pair $(a,
     b)$ we can use the extended Euclidean algorithm to efficiently find all
@@ -87,7 +88,7 @@
     be possible is if there's a power of two separating $a/b$ and $c/d$; that
     is, without loss of generality (swapping $a/b$ and $c/d$ if necessary)
     there's an $e$ satisfying
-    $$a/b < 2^e < c/d.$$
+    \[a/b < 2^e < c/d.\]
     From the bounds on $a$, $b$, $c$ and~$d$, we must have
     $-26 \le e \le 26$. But now $2^e$ can be expressed as a fraction with
     numerator and denominator not exceeding $67114657$, and since $a/b$ and
