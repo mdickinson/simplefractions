@@ -151,6 +151,23 @@ def _interval_rounding_to(
 def simplest_from_float(x: float) -> fractions.Fraction:
     """
     Return the simplest fraction that converts to the given float.
+
+    For any ``Fraction`` instance with numerator and denominator bounded
+    in absolute value by 67114657, if that fraction is converted to a
+    ``float`` then this function applied to that float will recover the
+    original ``Fraction`` exactly.
+
+    Examples
+    --------
+    >>> simplest_from_float(0.25)
+    Fraction(1, 4)
+    >>> import math; simplest_from_float(math.pi)
+    Fraction(245850922, 78256779)
+    >>> simplest_from_float(-0.16666666666666666)
+    Fraction(-1, 6)
+    >>> f = Fraction(64324742, 36722893)
+    >>> simplest_from_float(float(f)) == f
+    True
     """
     if not math.isfinite(x):
         raise ValueError("x should be finite")
