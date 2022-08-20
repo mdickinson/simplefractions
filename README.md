@@ -68,7 +68,7 @@ Fraction(231, 199)
 
 More precisely, if `x` was constructed by dividing two relatively prime
 integers smaller than or equal to `67114657` in absolute value,
-`simplest_from_float` _will_ recover those integers.
+`simplest_from_float` will recover those integers.
 
 ```python
 >>> simplest_from_float(64841043 / 66055498)
