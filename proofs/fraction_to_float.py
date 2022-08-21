@@ -1,7 +1,7 @@
 from math import gcd
 
 
-def find_cd(a, b):
+def find_cd(a: int, b: int) -> list[tuple[int, int]]:
     """
     Given a positive fraction a/b (expressed in lowest terms), find both
     fractions c/d which are simpler than a/b and which satisfy |ad - bc| = 1.
