@@ -66,7 +66,23 @@ more often than not, `simplest_from_float` will recover those integers:
 Fraction(231, 199)
 ```
 
-Though in some cases, `simplest_from_float` might discover a simpler fraction
+More precisely, if `x` was constructed by dividing two relatively prime
+integers smaller than or equal to `67114657` in absolute value,
+`simplest_from_float` will recover those integers.
+
+```python
+>>> simplest_from_float(64841043 / 66055498)
+Fraction(64841043, 66055498)
+```
+
+But `67114657` is the best we can do here:
+
+```python
+>>> simplest_from_float(67114658 / 67114657)
+Fraction(67114657, 67114656)
+```
+
+In larger cases, `simplest_from_float` might discover a simpler fraction
 that gives the same float:
 
 ```python

@@ -1,0 +1,131 @@
+% Build with
+%   pdflatex -shell-escape fraction_to_float.tex
+% The -shell-escape argument is necessary for the syntax highlighting of
+% the Python code, which calls out to pygments.
+
+\documentclass[a4paper]{article}
+
+\usepackage{minted}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{sourcecodepro}
+\usepackage[T1]{fontenc}
+
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+
+
+\title{Injectivity of fraction to float conversion}
+\author{Mark Dickinson}
+
+\begin{document}
+
+\maketitle
+
+It can occasionally be convenient to store fractions as floating-point numbers.
+Any mapping from the (infinite) set of all possible fractions to a finite set
+of limited-precision floats must necessarily be lossy: there will be examples
+of different fractions which map to the same float. But with a small enough
+bound on the numerator and denominator of the fractions considered, the
+function which maps each such bounded fraction to the nearest exactly
+representable float becomes injective, making it possibly to unambiguously
+recover the fraction from its floating-point representation. The best possible
+bound will depend on the target floating-point format.
+
+This note establishes that for IEEE 754 binary64 floating-point (often referred
+to as ``double precision''), $67114657$ is such a bound. This bound is best
+possible, since the distinct fractions $67114658 / 67114657$ and $67114657 /
+67114656$ round to the same IEEE 754 binary64 float under round-to-nearest.
+
+\begin{theorem}
+    Suppose that $a/b$ and $c/d$ are rational numbers, written in lowest terms
+    (with $b$ and $d$ positive), that $\max(\abs{a}, b, \abs{c}, d) \le
+    67114657$, and that $a/b$ and $c/d$ become equal when rounded to the
+    nearest finite IEEE binary64 floating-point number. Then $a/b = c/d$.
+\end{theorem}
+
+\begin{proof}
+    It's straightforward to check that when we round a fraction with numerator
+    and denominator bounded by~$67114657$ to a float, no underflow or overflow
+    occurs, and that under the same bounds positive fractions round to positive
+    floats and negative fractions to negative floats. So if $a/b$ and $c/d$
+    round to the same float then both are positive, both are negative, or both
+    are zero, and in the last case we're done. Negating both fractions if
+    necessary, without loss of generality we can assume going forward that all
+    of $a$, $b$, $c$ and $d$ are positive.
+
+    Now we separate into two cases. The first case we consider is the case in
+    which $a/b$ and $c/d$ belong to the same closed binade---that is, there's
+    an integer~$e$ such that both $a/b$ and $c/d$ lie in the interval $[2^e,
+    2^{e+1}]$.
+    Since consecutive IEEE 754 binary64 floats in that interval have
+    difference~$2^{e-52}$, for $a/b$ and $c/d$ to round to the same float we
+    must have
+    $\abs{a/b - c/d} \le 2^{e-52}$, from which
+    \begin{equation}
+        2^{52-e}\abs{ad - bc} \le bd.\label{ineq:1}
+    \end{equation}
+    From this inequality combined with $2^e \le a/b$ and $2^e \le c/d$, we
+    have:
+    \begin{equation}
+        2^{52+e}\abs{ad - bc} \le 2^{2e}bd \le ac  .\label{ineq:2}
+    \end{equation}
+    Using (\ref{ineq:1}) if $e \le 0$ and (\ref{ineq:2}) if $e \ge 0$, along
+    with the bound on~$\max(a, b, c, d)$, we have
+    \begin{equation}
+        2^{52 + \abs{e}}\abs{ad - bc} \le 67114657^2 < 2^{53}.\label{ineq:3}
+    \end{equation}
+    hence
+    \begin{equation}
+        2^{\abs{e}}\abs{ad - bc} < 2.\label{ineq:4}
+    \end{equation}
+    It follows that either $\abs{ad - bc} = 0$ (in which case $a/b = c/d$ as
+    required), or $\abs{ad - bc} = 1$ and $e = 0$. In this case the inequality
+    (\ref{ineq:1}) gives $2^{52} \le bd$, and the inequalities $2^e \le a/b$
+    and $2^e \le c/d$ give $b \le a$ and $c \le d$. At this point we look for
+    a contradiction.
+
+    Swapping $a/b$ and $c/d$ if necessary, we can assume that $d \le b$, so
+    from $2^{52} \le bd$ we have $2^{26} \le b \le a$. We can further deduce
+    that $d < b$ (if $d = b$ then $1 = |ad - bc|$ is divisible by $b$, which
+    is impossible), and that $0 < c < a$.
+
+    Now it's possible to do an exhaustive search over all pairs $(a, b)$ of
+    integers satisfying
+    \[2^{26} \le b \le a \le 67114657.\] There are exactly $16788115$ such
+    pairs (reducing to $10204542$ after we discard those with $\gcd(a, b) \ne
+    1$), making this search computationally very feasible. For each pair $(a,
+    b)$ we can use the extended Euclidean algorithm to efficiently find all
+    possible solutions in integers $c$ and $d$ to $\abs{ad - bc} = 1$ with $0 <
+    d \le b$ (there are at most two), and check that $a/b$ and $c/d$ do not
+    round to the same float, giving us our contradiction.
+
+    There remains the second case, where there is no integer $e$ such that
+    both $a/b$ and $c/d$ lie in $[2^e, 2^{e+1}]$. The only way for this to
+    be possible is if there's a power of two separating $a/b$ and $c/d$; that
+    is, without loss of generality (swapping $a/b$ and $c/d$ if necessary)
+    there's an $e$ satisfying
+    \[a/b < 2^e < c/d.\]
+    From the bounds on $a$, $b$, $c$ and~$d$, we must have
+    $-26 \le e \le 26$. But now $2^e$ can be expressed as a fraction with
+    numerator and denominator not exceeding $67114657$, and since $a/b$ and
+    $c/d$ round to the same float, $2^e$ (being squeezed between $a/b$ and
+    $c/d$) must round to that same float. So we can apply the case 1 proof to
+    $a/b$ and $2^e$ to deduce that $a/b = 2^e$, and again to $2^e$ and $c/d$ to
+    deduce that $2^e = c/d$, hence that $a/b = c/d$, as required.
+\end{proof}
+
+Listing \ref{lst:exhaustive} shows Python code for the exhaustive search;
+rather than stopping once it reaches $a = 67114657$, it keeps going to print
+all solutions found to $a/b = c/d$. It produces the first result in under 30
+seconds on my laptop.
+
+\begin{listing}
+\inputminted{python}{fraction_to_float.py}
+\caption{Exhaustive search}
+\label{lst:exhaustive}
+\end{listing}
+
+\end{document}
