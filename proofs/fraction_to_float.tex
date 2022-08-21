@@ -24,14 +24,18 @@
 
 \maketitle
 
-In some situations it's convenient to store fractions as double-precision IEEE
-754 binary floats. It's clear that any map from the infinite set of all
-fractions to the finite collection of all double-precision floats cannot be
-injective, but with a suitable bound on the numerator and denominator of the
-fractions considered, we should be able to recover injectivity of the map which
-takes each fraction to the closest representable float.
+It can occasionally be convenient to store fractions as floating-point numbers.
+Any mapping from the (infinite) set of all possible fractions to a finite set
+of limited-precision floats must necessarily be lossy: there will be examples
+of different fractions which map to the same float. But with a small enough
+bound on the numerator and denominator of the fractions considered, the
+function which maps each such bounded fraction to the nearest exactly
+representable float becomes injective, making it possibly to unambiguously
+recover the fraction from its floating-point representation. The best possible
+bound will depend on the target floating-point format.
 
-This note establishes that $67114657$ is such a bound. This bound is best
+This note establishes that for IEEE 754 binary64 floating-point (often referred
+to as ``double precision''), $67114657$ is such a bound. This bound is best
 possible, since the distinct fractions $67114658 / 67114657$ and $67114657 /
 67114656$ round to the same IEEE 754 binary64 float under round-to-nearest.
 
