@@ -1,5 +1,6 @@
 from math import gcd
 
+
 def find_cd(a, b):
     """
     Given a positive fraction a/b (expressed in lowest terms), find both
@@ -10,6 +11,7 @@ def find_cd(a, b):
         x = a // b
         a, b, p, q, r, s = b, a - x * b, r, s, p + x * r, q + x * s
     return [(p, q), (r - p, s - q)]
+
 
 for a in range(2**26, 2**27):
     for b in range(2**26, a):
