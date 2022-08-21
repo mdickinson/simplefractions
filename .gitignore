@@ -1,1 +1,6 @@
+# Python bytecode
 *.pyc
+
+# Build and distribution
+/dist/
+/src/*.egg-info/
