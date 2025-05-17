@@ -1,5 +1,4 @@
 import typing
-
 from math import gcd
 
 
