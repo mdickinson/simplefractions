@@ -27,5 +27,8 @@ target-version = ['py36']
 profile = 'black'
 order_by_type = 'False'
 
+[tool.mypy]
+strict = true
+
 [tool.setuptools_scm]
 version_scheme = 'release-branch-semver'
