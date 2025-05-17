@@ -20,15 +20,11 @@ dynamic = ['version']
 [project.urls]
 source = 'https://github.com/mdickinson/simplefractions'
 
-[tool.black]
-target-version = ['py38']
-
-[tool.isort]
-profile = 'black'
-order_by_type = 'False'
-
 [tool.mypy]
 strict = true
+
+[tool.ruff.lint]
+extend-select = ["I"]
 
 [tool.setuptools_scm]
 version_scheme = 'release-branch-semver'
