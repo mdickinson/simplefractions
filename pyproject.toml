@@ -6,7 +6,7 @@ build-backend = 'setuptools.build_meta'
 name = 'simplefractions'
 description = 'Find the simplest fraction for a given float or interval'
 readme = 'README.md'
-requires-python = '>=3.6'
+requires-python = '>=3.8'
 authors = [{name = 'Mark Dickinson', email = 'dickinsm@gmail.com'}]
 keywords = ['fractions', 'continued fractions', 'approximation']
 classifiers = [
@@ -21,7 +21,7 @@ dynamic = ['version']
 source = 'https://github.com/mdickinson/simplefractions'
 
 [tool.black]
-target-version = ['py36']
+target-version = ['py38']
 
 [tool.isort]
 profile = 'black'
