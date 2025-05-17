@@ -23,6 +23,11 @@ jobs:
         allow-prereleases: true
     - name: Install dependencies
       run: python -m pip install -r requirements/test.txt
+    - name: Check types with mypy
+      run: python -m mypy .
+      # Skip type check for Python 3.14, since it's hitting an argparse-related
+      # issue in mypy: https://github.com/python/mypy/pull/19020
+      if: matrix.python-version != '3.14'
     - name: Test with pytest
       run: python -m pytest
 
@@ -44,4 +49,3 @@ jobs:
         python -m flake8 .
         python -m isort --check --diff .
         python -m black --check --diff .
-        python -m mypy --strict .
