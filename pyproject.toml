@@ -24,7 +24,4 @@ source = 'https://github.com/mdickinson/simplefractions'
 strict = true
 
 [tool.ruff.lint]
-extend-select = ["I"]
-
-[tool.setuptools_scm]
-version_scheme = 'release-branch-semver'
+extend-select = ["I", "UP", "W"]  # isort, pyupgrade, pycodestyle warnings
