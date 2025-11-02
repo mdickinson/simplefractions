@@ -12,3 +12,22 @@ From the root directory of the repository:
 - Run `uv run coverage run` to execute the test suite under coverage.
 - Run `uvx ruff check` for linting checks.
 - Run `uvx ruff format` to format the code.
+
+## Making a release
+
+There's a GitHub Actions workflow that will automatically publish a release to
+PyPI when a GitHub release is created.
+
+Steps to make a release:
+
+- Bump the version number in the `pyproject.toml` file if necessary, for example using
+  `uv version --bump minor` for a minor release. (Note: this also updates the lockfile.)
+  Make a PR for the version bump.
+- Ensure that the lockfile has been updated. (Not necessary if you used `uv version`.)
+- Prepare release notes in a (temporary) markdown file.
+- Tag the release commit with an annotated tag (e.g. `git tag -a 2.3.4`); include the
+  prepared release notes in the commit message body.
+- Go to the GitHub releases page: https://github.com/mdickinson/simplefractions/releases
+- Create a new release, using the previously prepared release notes.
+- Double-check that the release workflow succeeded and that the new release is present
+  on PyPI at https://pypi.org/project/simplefractions.

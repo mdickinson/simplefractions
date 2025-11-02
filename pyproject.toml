@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = 'simplefractions'
-version = '1.4.0'
+version = "1.4.0"
 description = 'Find the simplest fraction for a given float or interval'
 readme = 'README.md'
 requires-python = '>=3.10'
