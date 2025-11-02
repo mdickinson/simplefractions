@@ -10,9 +10,7 @@ jobs:
   build-and-upload:
     name: Build and upload release to PyPI
     runs-on: ubuntu-latest
-    environment:
-      name: release
-      url: https://pypi.org/p/simplefractions
+    environment: release
     permissions:
       id-token: write
 
