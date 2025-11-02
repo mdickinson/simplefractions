@@ -244,6 +244,30 @@ class SimpleFractionsTests(unittest.TestCase):
             with self.subTest(f=f):
                 self.check_simplest_from_float(f)
 
+    def test_simplest_from_float_open_closed_cases(self) -> None:
+        # Cases where it matters whether the interval rounding to
+        # the float is open or closed.
+
+        # Even floats
+        self.assertEqual(simplest_from_float(1e16), 10**16 - 1)
+        self.assertEqual(simplest_from_float(1e16 + 4), 10**16 + 3)
+        self.assertEqual(simplest_from_float(float(2**54 - 4)), 2**54 - 5)
+        self.assertEqual(simplest_from_float(float(2**54)), 2**54 - 1)
+        self.assertEqual(simplest_from_float(float(2**54 + 8)), 2**54 + 6)
+
+        # Odd floats
+        self.assertEqual(simplest_from_float(1e16 + 2), 10**16 + 2)
+        self.assertEqual(simplest_from_float(float(2**54 - 2)), 2**54 - 2)
+        self.assertEqual(simplest_from_float(float(2**54 + 4)), 2**54 + 3)
+
+    def test_simplest_from_float_powers_of_two(self) -> None:
+        # Powers of two that are exactly representable in IEEE 754 binary64.
+        TWO = fractions.Fraction(2)
+        for e in range(-1074, 1024):
+            f = TWO**e
+            with self.subTest(f=f):
+                self.check_simplest_from_float(f)
+
     def test_simplest_from_float_special_values(self) -> None:
         with self.assertRaises(ValueError):
             simplest_from_float(math.inf)

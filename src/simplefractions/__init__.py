@@ -37,7 +37,6 @@ import decimal
 import fractions
 import math
 import numbers
-import struct
 import typing
 
 from simplefractions._simplest_in_interval import _simplest_in_interval
@@ -115,6 +114,11 @@ def _interval_rounding_to(
     """
     Return the interval of numbers that round to a given float.
 
+    Parameters
+    ----------
+    x
+        A finite float.
+
     Returns
     -------
     left, right : fractions.Fraction
@@ -123,22 +127,18 @@ def _interval_rounding_to(
     closed : bool
         True if the interval is closed at both ends, else False.
     """
-    if x < 0:
+    if x < 0.0:
         left, right, closed = _interval_rounding_to(-x)
         return -right, -left, closed
 
-    if x == 0:
-        n = struct.unpack("<Q", struct.pack("<d", 0.0))[0]
-        x_plus = struct.unpack("<d", struct.pack("<Q", n + 1))[0]
-        right = (fractions.Fraction(x) + fractions.Fraction(x_plus)) / 2
+    if x == 0.0:
+        right = fractions.Fraction(math.nextafter(0.0, math.inf)) / 2
         return -right, right, True
 
-    n = struct.unpack("<Q", struct.pack("<d", x))[0]
-    x_plus = struct.unpack("<d", struct.pack("<Q", n + 1))[0]
-    x_minus = struct.unpack("<d", struct.pack("<Q", n - 1))[0]
-
-    closed = n % 2 == 0
+    x_plus = math.nextafter(x, math.inf)
+    x_minus = math.nextafter(x, 0.0)
     left = (fractions.Fraction(x) + fractions.Fraction(x_minus)) / 2
+    closed = float(left) == x
     if math.isinf(x_plus):
         # Corner case where x was the largest representable finite float
         right = 2 * fractions.Fraction(x) - left
