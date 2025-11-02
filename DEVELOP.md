@@ -25,9 +25,14 @@ Steps to make a release:
   Make a PR for the version bump.
 - Ensure that the lockfile has been updated. (Not necessary if you used `uv version`.)
 - Prepare release notes in a (temporary) markdown file.
-- Tag the release commit with an annotated tag matching the version (e.g. `git tag -a
-  2.3.4`); include the prepared release notes in the commit message body.
+- Tag the release commit with an annotated tag matching the version:
+
+      git tag -a $(uv version --short)
+
+  Include the prepared release notes in the commit message body.
+- Push the tag with `git push --tag`
 - Go to the GitHub releases page: https://github.com/mdickinson/simplefractions/releases
-- Create a new release, using the previously prepared release notes.
+- Create a new release ("Draft a new release"), using the previously-prepared release
+  notes and a release title of the form "simplefractions n.n.n".
 - Double-check that the release workflow succeeded and that the new release is present
   on PyPI at https://pypi.org/project/simplefractions.
