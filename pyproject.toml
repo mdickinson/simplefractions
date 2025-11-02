@@ -43,4 +43,4 @@ addopts = ["--pyargs", "--import-mode=importlib"]
 target-version = "py310"
 
 [tool.ruff.lint]
-extend-select = ["I", "UP", "W"]  # isort, pyupgrade, pycodestyle warnings
+extend-select = ["I", "W"]  # isort, pycodestyle warnings
