@@ -2,6 +2,7 @@ name: on-release
 
 on:
   workflow_dispatch:
+  pull_request:
   release:
     types: [published]
 
@@ -9,7 +10,9 @@ jobs:
   build-and-upload:
     name: Build and upload release to PyPI
     runs-on: ubuntu-latest
-    environment: release
+    environment:
+      name: release
+      url: https://pypi.org/p/simplefractions
     permissions:
       id-token: write
 
