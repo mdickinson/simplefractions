@@ -145,7 +145,7 @@ def _simplest_in_interval_pos(
             return a + b, c + d
 
 
-def _simplest_in_interval(
+def simplest_in_interval_strict(
     left: fractions.Fraction | None = None,
     right: fractions.Fraction | None = None,
     *,
@@ -154,6 +154,8 @@ def _simplest_in_interval(
 ) -> fractions.Fraction:
     """
     Simplest fraction in a subinterval of the real line.
+
+    Strictly-typed version: both left and right must be fractions.Fraction instances.
 
     Parameters
     ----------
