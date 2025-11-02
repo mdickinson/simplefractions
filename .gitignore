@@ -1,6 +1,9 @@
 # Python bytecode
 *.pyc
 
+# Coverage database
+.coverage
+
 # Build and distribution
 /dist/
 /src/*.egg-info/
