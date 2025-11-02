@@ -39,7 +39,7 @@ import math
 import numbers
 import typing
 
-from simplefractions._simplest_in_interval import _simplest_in_interval
+from simplefractions._simplest_in_interval import simplest_in_interval_strict
 
 #: Names to be exported when doing 'from simplefractions import *'.
 __all__ = ["simplest_from_float", "simplest_in_interval"]
@@ -103,8 +103,11 @@ def simplest_in_interval(
     if right is not None:
         right = fractions.Fraction(right)
 
-    return _simplest_in_interval(
-        left, right, include_left=include_left, include_right=include_right
+    return simplest_in_interval_strict(
+        left,
+        right,
+        include_left=include_left,
+        include_right=include_right,
     )
 
 
@@ -173,4 +176,9 @@ def simplest_from_float(x: float) -> fractions.Fraction:
         raise ValueError("x should be finite")
 
     left, right, closed = _interval_rounding_to(x)
-    return _simplest_in_interval(left, right, include_left=closed, include_right=closed)
+    return simplest_in_interval_strict(
+        left,
+        right,
+        include_left=closed,
+        include_right=closed,
+    )
