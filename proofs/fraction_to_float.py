@@ -1,8 +1,7 @@
-import typing
 from math import gcd
 
 
-def find_cd(a: int, b: int) -> typing.List[typing.Tuple[int, int]]:
+def find_cd(a: int, b: int) -> list[tuple[int, int]]:
     """
     Given a positive fraction a/b (expressed in lowest terms), find both
     fractions c/d which are simpler than a/b and which satisfy |ad - bc| = 1.

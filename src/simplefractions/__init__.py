@@ -48,12 +48,12 @@ __all__ = ["simplest_from_float", "simplest_in_interval"]
 
 #: Type that roughly matches "number acceptable by the fractions.Fraction
 #: constructor"
-FractionCompatible = typing.Union[int, float, decimal.Decimal, numbers.Rational]
+FractionCompatible: typing.TypeAlias = int | float | decimal.Decimal | numbers.Rational
 
 
 def simplest_in_interval(
-    left: typing.Optional[FractionCompatible] = None,
-    right: typing.Optional[FractionCompatible] = None,
+    left: FractionCompatible | None = None,
+    right: FractionCompatible | None = None,
     *,
     include_left: bool = False,
     include_right: bool = False,
@@ -111,7 +111,7 @@ def simplest_in_interval(
 
 def _interval_rounding_to(
     x: float,
-) -> typing.Tuple[fractions.Fraction, fractions.Fraction, bool]:
+) -> tuple[fractions.Fraction, fractions.Fraction, bool]:
     """
     Return the interval of numbers that round to a given float.
 

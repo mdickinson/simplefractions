@@ -105,12 +105,11 @@ fraction in the interval.
 """
 
 import fractions
-import typing
 
 
 def _simplest_in_interval_pos(
     r: int, s: int, t: bool, u: int, v: int, w: bool
-) -> typing.Tuple[int, int]:
+) -> tuple[int, int]:
     """
     Simplest fraction in a subinterval of the positive reals.
 
@@ -147,8 +146,8 @@ def _simplest_in_interval_pos(
 
 
 def _simplest_in_interval(
-    left: typing.Optional[fractions.Fraction] = None,
-    right: typing.Optional[fractions.Fraction] = None,
+    left: fractions.Fraction | None = None,
+    right: fractions.Fraction | None = None,
     *,
     include_left: bool = False,
     include_right: bool = False,
